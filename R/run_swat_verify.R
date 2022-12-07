@@ -224,9 +224,11 @@ read_mgt <- function(run_path) {
 }
 
 
-#' Generate folder structure for parallel SWAT execution
+#' Generate folder structure for SWAT execution
 #'
 #' @param project_path Path to the SWAT project folder (i.e. TxtInOut)
+#'
+#' @keywords internal
 #'
 build_model_run <- function(project_path){
   run_path <- paste0(project_path, '/.run_verify')

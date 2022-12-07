@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_swat_verify.R
 \name{build_model_run}
 \alias{build_model_run}
-\title{Generate folder structure for parallel SWAT execution}
+\title{Generate folder structure for SWAT execution}
 \usage{
 build_model_run(project_path)
 }
@@ -10,5 +10,6 @@ build_model_run(project_path)
 \item{project_path}{Path to the SWAT project folder (i.e. TxtInOut)}
 }
 \description{
-Generate folder structure for parallel SWAT execution
+Generate folder structure for SWAT execution
 }
+\keyword{internal}
