@@ -3,7 +3,7 @@
 export(get_hru_id_by_attribute)
 export(plot_climate_annual)
 export(plot_hru_pw_day)
-export(plot_phuplant_harvest)
+export(plot_variable_at_harvkill)
 export(print_triggered_mgt)
 export(run_swat_verification)
 import(ggplot2)

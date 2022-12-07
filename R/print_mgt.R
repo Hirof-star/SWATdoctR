@@ -32,33 +32,64 @@ print_triggered_mgt <- function(sim_verify, hru_id, start_year = 1900, end_year 
     print(., n = Inf)
 }
 
-#' Boxplot of heat unit fractions for crops at harvest-kill operation
+#' Boxplot for relevant variables at harvest-kill
 #'
-#' plot_phuplant_harvest plots boxplots of the collected heat unit fractions
+#' plot_variable_at_harvkill plots boxplots of one of the variables crop heat unit
+#' fractions ('phu'), crop yields ('yield'), or plant biomass ('bioms') for crops
 #' at harvest-kill of a crop separated for all identified crops.
 #'
 #' @param sim_verify Simulation output of the function \code{run_swat_verification()}.
 #'   To plot the heat units at least the output option \code{outputs = 'mgt'} must
 #'   be set in  \code{run_swat_verification()}
+#' @param variable Selected variable to be plotted. Must be one of: 'phu', 'yield', 'bioms'
+#' @param years Simulated years which are aggregated in the boxplot
 #'
-#' @return ggplot boxplot with crop heat unit fractions at harvest-kill.
+#' @return ggplot boxplot the selected variable at harvest-kill.
 #'
 #' @importFrom dplyr filter group_by mutate rename select ungroup %>%
 #' @importFrom ggplot2 aes ggplot geom_boxplot geom_hline labs theme_bw
+#' @importFrom purrr set_names
 #' @export
 #'
-plot_phuplant_harvest <- function(sim_verify) {
-  hu_harv <- sim_verify$mgt_out %>%
+plot_variable_at_harvkill <- function(sim_verify, variable, years = 1900:2100) {
+  tbl_harv <- sim_verify$mgt_out %>%
+    filter(year %in% years) %>%
     filter(operation %in% c('HARVEST', 'KILL')) %>%
     group_by(hru,year, mon, day) %>%
     mutate(n = n()) %>%
     ungroup() %>%
-    filter(n == 2, operation == 'HARVEST') %>%
-    select(op_typ, phuplant)
+    filter(n == 2, operation == 'HARVEST')
 
-  ggplot(data = hu_harv) +
-    geom_boxplot(aes(x = op_typ, y = phuplant)) +
-    geom_hline(yintercept = 1, lty = 2) +
-    labs(x = 'Crops', y = 'Crop HUs at harvest') +
+  if(variable == 'phu') {
+    tbl_harv <- tbl_harv %>%
+      select(op_typ, phuplant) %>%
+      set_names(c('crop', 'var'))
+
+    y_lbl <-  'Crop HUs at harvest/kill'
+  }else if(variable == 'yield') {
+    tbl_harv <- tbl_harv %>%
+      select(op_typ, op_var) %>%
+      set_names(c('crop', 'var'))
+
+    y_lbl <-  'Crop yield at harvest/kill'
+  } else if(variable == 'bioms') {
+    tbl_harv <- tbl_harv %>%
+      select(op_typ, plant_bioms) %>%
+      set_names(c('crop', 'var'))
+
+    y_lbl <-  'Biomass at harvest/kill'
+  } else {
+    stop("Variable must be one of: 'phu', 'yield', 'bioms'")
+  }
+
+  gg <- ggplot(data = tbl_harv) +
+    geom_boxplot(aes(x = crop, y = var)) +
+    labs(x = 'Crops', y = 'Crop HUs at harvest/kill') +
     theme_bw()
+
+  if(variable == 'phu') {
+    gg + geom_hline(yintercept = 1, lty = 2)
+  }
+
+  return(gg)
 }
