@@ -20,6 +20,10 @@
 #'   in the form yyyymmdd, or in Date format.
 #' @param years_skip (optional) Integer value to define the number of simulation
 #'   years that are skipped before writing SWAT model outputs.
+#' @param nostress nostress parameter in the 'codes.bsn' file to activate/deactivate
+#'   plant stresses for plant growth. Set \code{nostress = 1} to activate all stress
+#'   factors, \code{nostress = 1} to deactivate all stress factors, and \code{nostress = 1}
+#'   to only activate nutrient plant stress.
 #' @param keep_folder (optional) If \code{keep_folder = TRUE}
 #'   '.model_run/verification' is kept and not deleted after finishing model runs.
 #'   In this case '.model_run' is reused in a new model run if \code{refresh = FALSE}.
@@ -36,7 +40,8 @@
 #'
 run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
                                   start_date = NULL, end_date = NULL,
-                                  years_skip = NULL, keep_folder = FALSE) {
+                                  years_skip = NULL, nostress = 1,
+                                  keep_folder = FALSE) {
 
   # Check settings before starting to set up '.model_run'
   ## General function input checks
@@ -48,6 +53,7 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
 
   set_print_prt(project_path, run_path, outputs, years_skip)
   set_time_sim(project_path, run_path, start_date, end_date)
+  set_codes_bsn(run_path, nostress)
 
   ## Get operating system and find SWAT executable file
   os <- get_os()
@@ -195,6 +201,7 @@ read_tbl <- function(file, run_path, n_skip) {
 #'
 #' @param run_path Path to the folder where simulations are performed
 #'
+#' @importFrom dplyr %>%
 #' @importFrom purrr map map_df set_names
 #' @importFrom stringr str_trim str_split
 #' @importFrom tibble as_tibble
@@ -205,7 +212,8 @@ read_tbl <- function(file, run_path, n_skip) {
 read_mgt <- function(run_path) {
   file_path <- paste0(run_path, '/mgt_out.txt')
 
-  mgt <- vroom_lines(file_path, skip = 3) %>%
+  mgt <- read_lines(file_path, skip = 3, lazy = FALSE) %>%
+    unlist() %>%
     str_trim(.) %>%
     str_split(., '\t[:space:]+|[:space:]+') %>%
     map(., ~ .x[1:21]) %>%
@@ -222,7 +230,6 @@ read_mgt <- function(run_path) {
 
   return(mgt)
 }
-
 
 #' Generate folder structure for SWAT execution
 #'
@@ -323,4 +330,35 @@ set_time_sim <- function(project_path, run_path, start_date, end_date) {
   }
 
   write_lines(time_sim, paste0(run_path,'/time.sim'))
+}
+
+#' Set the nostress value in the code.bsn file
+#'
+#' @param run_path Path to the folder where simulations are performed
+#' @param nostress nostress parameter in the 'codes.bsn' file to activate/deactivate
+#'   plant stresses for plant growth. Set \code{nostress = 1} to activate all stress
+#'   factors, \code{nostress = 1} to deactivate all stress factors, and \code{nostress = 1}
+#'   to only activate nutrient plant stress.
+#'
+#' @importFrom dplyr %>%
+#' @importFrom purrr map2_chr
+#' @importFrom readr read_lines write_lines
+#' @importFrom stringr str_trim str_split
+#'
+#' @keywords internal
+#'
+set_codes_bsn <- function(run_path, nostress) {
+  bsn_path <- paste0(run_path, '/codes.bsn')
+  bsn <- read_lines(bsn_path)
+  bsn_val <- bsn[3] %>%
+    str_trim(.) %>%
+    str_split(., '[:space:]+') %>%
+    unlist()
+  bsn_val[11] <- nostress
+  bsn[3] <- bsn_val %>%
+    map2_chr(., c('%16s', '%18s', rep('%10s', 19), '%18s', rep('%10s', 2)),
+             ~sprintf(.y, .x)) %>%
+    paste(., collapse = '')
+
+  write_lines(bsn, bsn_path)
 }

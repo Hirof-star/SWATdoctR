@@ -10,6 +10,7 @@ run_swat_verification(
   start_date = NULL,
   end_date = NULL,
   years_skip = NULL,
+  nostress = 1,
   keep_folder = FALSE
 )
 }
@@ -31,6 +32,11 @@ in the form yyyymmdd, or in Date format.}
 
 \item{years_skip}{(optional) Integer value to define the number of simulation
 years that are skipped before writing SWAT model outputs.}
+
+\item{nostress}{nostress parameter in the 'codes.bsn' file to activate/deactivate
+plant stresses for plant growth. Set \code{nostress = 1} to activate all stress
+factors, \code{nostress = 1} to deactivate all stress factors, and \code{nostress = 1}
+to only activate nutrient plant stress.}
 
 \item{keep_folder}{(optional) If \code{keep_folder = TRUE}
 '.model_run/verification' is kept and not deleted after finishing model runs.
