@@ -13,7 +13,7 @@
 #'
 #' @return ggplot boxplot the selected variable at harvest-kill.
 #'
-#' @importFrom dplyr filter group_by mutate rename select ungroup %>%
+#' @importFrom dplyr filter group_by mutate n rename select ungroup %>%
 #' @importFrom ggplot2 aes ggplot geom_boxplot geom_hline labs theme_bw
 #' @importFrom purrr set_names
 #' @export
