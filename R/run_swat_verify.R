@@ -21,8 +21,8 @@
 #' @param years_skip (optional) Integer value to define the number of simulation
 #'   years that are skipped before writing SWAT model outputs.
 #' @param nostress nostress parameter in the 'codes.bsn' file to activate/deactivate
-#'   plant stresses for plant growth. Set \code{nostress = 1} to activate all stress
-#'   factors, \code{nostress = 1} to deactivate all stress factors, and \code{nostress = 1}
+#'   plant stresses for plant growth. Set \code{nostress = 0} to activate all stress
+#'   factors, \code{nostress = 1} to deactivate all stress factors, and \code{nostress = 2}
 #'   to only activate nutrient plant stress.
 #' @param keep_folder (optional) If \code{keep_folder = TRUE}
 #'   '.model_run/verification' is kept and not deleted after finishing model runs.

@@ -96,14 +96,14 @@ plot_climate_annual <- function(sim_verify) {
     group_by(yr) %>%
     summarise(tmn_d = min(tmn),
               tmx_d = max(tmx),
-              tmn_a = mean(tmn),
-              tmx_a = mean(tmx),
+              # tmn_a = mean(tmn),
+              # tmx_a = mean(tmx),
               tmpav = mean(tmpav)) %>%
     pivot_longer(cols = -yr)
 
   gg_tmp <- ggplot() +
     geom_errorbarh(data = tmp_tbl, aes(xmax = yr + 0.5, xmin = yr - 0.5, y = value, height = 0, col = name), lwd = 1) +
-    scale_color_manual(values = c('dodgerblue2', 'dodgerblue4', 'black', 'tomato1', 'tomato3')) +
+    scale_color_manual(values = c('dodgerblue4', 'black', 'tomato3')) +
     # geom_step(data = pet_tbl, aes(x = yr, y = value_sum), direction = 'mid') +
     labs(y = 'Temperature (°C)') +
     theme_bw() +
@@ -144,9 +144,18 @@ plot_climate_annual <- function(sim_verify) {
   gg_pcp_stat <- plot_stat_text(clim_data_annual,
                                 vars = c('precip', 'rainfall', 'snofall'),
                                 c(5,4,3), 'mm', F)
-  gg_tmp_stat <- plot_stat_text(rename(clim_data, value_sum = value),
-                                vars = c('tmn', 'tmx', 'tmpav'),
-                                c(5,4,3), '°C', F)
+  tmp_stat <- clim_data %>%
+    filter(name %in% c('tmn', 'tmx', 'tmpav')) %>%
+    group_by(name) %>%
+    summarise(val_min = min(value),
+              val_max = max(value),
+              val_mean = mean(value)) %>%
+    mutate(name = c('tmn day', 'tmpav', 'tmx day'),
+           value_sum = c(val_min[1], val_mean[2], val_max[3])) %>%
+    select(name, value_sum)
+  gg_tmp_stat <- plot_stat_text(tmp_stat,
+                                vars = c('tmn day', 'tmpav', 'tmx day'),
+                                c(5,4,3), '°C', F, digit = 1)
   gg_slr_stat <- plot_stat_text(clim_data_annual, vars = c('solarad'),
                                 c(5), 'MJ m^-2', F)
 
@@ -166,12 +175,12 @@ plot_climate_annual <- function(sim_verify) {
 #'
 #' @keywords internal
 #'
-plot_stat_text <- function(tbl, vars, pos, unit_add, add_title) {
+plot_stat_text <- function(tbl, vars, pos, unit_add, add_title, digit = 0) {
   tbl_mean <- tbl %>%
     filter(name %in% vars) %>%
-    select(name, yr, value_sum) %>%
+    select(name, value_sum) %>%
     group_by(name) %>%
-    summarise(value_sum = round(mean(value_sum))) %>%
+    summarise(value_sum = round(mean(value_sum), digits = digit)) %>%
     mutate(value_sum = paste(value_sum, unit_add),
            y = pos)
 
@@ -186,4 +195,45 @@ plot_stat_text <- function(tbl, vars, pos, unit_add, add_title) {
   }
 
   return(gg)
+}
+
+#' Plot average monthly precipitation components rainfall and snofall and the snow melt
+#'
+#' plot_snow_monthly uses the simulated basin averages of precip, and snofall,
+#' and plots average monthly sums of rainfall, snofall and snomlt.
+#' This is plot can be helpful to verify the dominant snow processes and
+#' can be useful in catchments where large spring runoff through snowmelt
+#' plays a relevant role.
+#'
+#' @param sim_verify Simulation output of the function \code{run_swat_verification()}.
+#'   To plot the climate outputs at least the output option \code{outputs = 'wb'} must
+#'   be set in  \code{run_swat_verification()}.
+#'
+#' @return Returns a ggplots for the monthly average values of the simulated
+#'   precip, snofall and snomlt.
+#'
+#' @importFrom dplyr group_by mutate select summarise %>%
+#' @importFrom lubridate month
+#' @importFrom tidyr pivot_longer
+#' @import ggplot2
+#' @export
+#'
+plot_monthly_snow <- function(sim_verify) {
+  sno_wb <- sim_verify$basin_wb_day %>%
+    mutate(rainfall = precip - snofall) %>%
+    select(yr, mon, rainfall, snofall, snomlt) %>%
+    pivot_longer(., cols = - c(yr, mon)) %>%
+    group_by(name, mon, yr) %>%
+    summarise(value = sum(value), .groups = 'drop_last') %>%
+    group_by(name, mon) %>%
+    summarise(., value = mean(value), .groups = 'drop') %>%
+    mutate(process = ifelse(name == 'snomlt', 'Snow melt', 'Precipitation'),
+           mon = month(mon, label = T))
+
+  ggplot(data = sno_wb) +
+    geom_col(aes(x = mon, y = value, fill = name)) +
+    labs(x = 'Month', y = 'Average monthly sum (mm)', fill = 'Process') +
+    scale_fill_manual(values = c('dodgerblue4','slategray2', 'skyblue4')) +
+    facet_wrap(.~process, ncol = 1) +
+    theme_bw()
 }

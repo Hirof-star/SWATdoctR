@@ -4,7 +4,7 @@
 \alias{plot_stat_text}
 \title{Plot annual average values in tabular text form as a ggplot}
 \usage{
-plot_stat_text(tbl, vars, pos, unit_add, add_title)
+plot_stat_text(tbl, vars, pos, unit_add, add_title, digit = 0)
 }
 \arguments{
 \item{tbl}{Processed climate variable table}
