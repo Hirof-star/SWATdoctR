@@ -77,6 +77,7 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
     if ('wb' %in% outputs) {
       model_output$basin_wb_day <- read_tbl('basin_wb_day.txt', run_path, 3)
       model_output$basin_pw_day <- read_tbl('basin_pw_day.txt', run_path, 3)
+      model_output$hru_wb_aa <- read_tbl('hru_wb_aa.txt', run_path, 3)
     }
     if ('mgt' %in% outputs) {
       model_output$mgt_out <- read_mgt(run_path)
@@ -86,7 +87,7 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
       landuse_lum <- read_tbl('landuse.lum', run_path, 2)
       model_output$lum_mgt <- left_join(hru_data, landuse_lum,
                                         by = c("lu_mgt" = 'name')) %>%
-        select(id, topo, hydro, soil, lu_mgt, mgt)
+        select(id, topo, hydro, soil, lu_mgt, plnt_com, mgt, tile)
     }
   }
 
@@ -329,6 +330,7 @@ set_print_prt <- function(project_path, run_path, outputs, years_skip) {
   if ('wb' %in% outputs) {
     print_prt[11] <- "basin_wb                     y             n             n             n  "
     print_prt[14] <- "basin_pw                     y             n             n             n  "
+    print_prt[33] <- "hru_wb                       n             n             n             y  "
   }
   if ('mgt' %in% outputs) {
     print_prt[9]  <- "n             y             n             n             "

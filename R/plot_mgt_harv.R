@@ -1,14 +1,15 @@
-
 #' Boxplot for relevant variables at harvest-kill
 #'
 #' plot_variable_at_harvkill plots boxplots of one of the variables crop heat unit
 #' fractions ('phu'), crop yields ('yield'), or plant biomass ('bioms') for crops
 #' at harvest-kill of a crop separated for all identified crops.
 #'
-#' @param sim_verify Simulation output of the function \code{run_swat_verification()}.
-#'   To plot the heat units at least the output option \code{outputs = 'mgt'} must
-#'   be set in  \code{run_swat_verification()}
-#' @param variable Selected variable to be plotted. Must be one of: 'phu', 'yield', 'bioms'
+#' @param sim_verify Simulation output of the function
+#'   \code{run_swat_verification()}.
+#'   To plot the heat units at least the output option \code{outputs = 'mgt'}
+#'   must be set in \code{run_swat_verification()}
+#' @param variable Selected variable to be plotted. Must be one of: 'phu',
+#'   'yield', 'bioms'
 #' @param years Simulated years which are aggregated in the boxplot
 #'
 #' @return ggplot boxplot the selected variable at harvest-kill.

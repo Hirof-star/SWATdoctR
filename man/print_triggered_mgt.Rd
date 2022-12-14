@@ -4,7 +4,7 @@
 \alias{print_triggered_mgt}
 \title{Print the triggered management operations from the mgt outputs for a certain HRU}
 \usage{
-print_triggered_mgt(sim_verify, hru_id, start_year = 1900, end_year = 2100)
+print_triggered_mgt(sim_verify, hru_id, years = 1900:2100)
 }
 \arguments{
 \item{sim_verify}{Simulation output of the function \code{run_swat_verification()}.
@@ -14,9 +14,7 @@ be set in  \code{run_swat_verification()}}
 \item{hru_id}{id of the HRU for which the triggered management operations should
 be printed}
 
-\item{start_year}{Integer value to define the first year of printing.}
-
-\item{end_year}{Integer value to define the last year of printing.}
+\item{years}{Integer vector to define the years to be printed.}
 }
 \value{
 Prints a tibble with triggered operations to the R console.

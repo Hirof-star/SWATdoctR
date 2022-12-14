@@ -46,7 +46,7 @@ get_hru_id_by_attribute <- function(sim_verify, lum = NULL, mgt = NULL, soil = N
 #' @param var Character vector that defines the variable names that are plotted
 #' @param years Years of the simulated data for which varaibles are plotted.
 #'
-#' @importFrom dplyr filter mutate select
+#' @importFrom dplyr filter mutate select %>%
 #' @importFrom lubridate ymd
 #' @importFrom tidyr pivot_longer
 #' @importFrom tidyselect all_of
@@ -77,3 +77,38 @@ plot_hru_pw_day <- function(sim_verify, hru_id, var, years = 1900:2100) {
           strip.text = element_text(face = 'bold'),
           axis.title.y = element_blank())
 }
+
+
+#' Print the average annual qtile for HRUs
+#'
+#' print_avannual_qtile prints a table with the average annual qtile in mm
+#' for HRUs that used a tile flow parametrization in landuse.lum
+#'
+#' @param sim_verify Simulation output of the function \code{run_swat_verification()}.
+#'   To plot the heat units at least the output option \code{outputs = 'wb'} must
+#'   be set in  \code{run_swat_verification()}
+#' @param exclude_lum Character vector to define land uses which are excluded
+#'   in the printed table.
+#'
+#' @importFrom dplyr arrange filter left_join rename select %>%
+#'
+#' @return Returns a table with hru ids average annual qtile and attributes.
+#'
+#' @export
+#'
+print_avannual_qtile <- function(sim_verify,
+                                 exclude_lum = c(
+                                   "urhd_lum", "urmd_lum", "urml_lum",
+                                   "urld_lum", "ucom_lum", "uidu_lum",
+                                   "utrn_lum", "uins_lum", "urbn_lum"
+                                 )) {
+
+  sim_verify$hru_wb_aa %>%
+    rename(id = unit) %>%
+    left_join(., sim_verify$lum_mgt, by = "id") %>%
+    filter(tile != 'null') %>%
+    filter(!lu_mgt %in% exclude_lum) %>%
+    select(id, qtile, lu_mgt, mgt, soil) %>%
+    arrange(qtile, id)
+}
+
