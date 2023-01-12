@@ -105,7 +105,7 @@ plot_climate_annual <- function(sim_verify) {
     geom_errorbarh(data = tmp_tbl, aes(xmax = yr + 0.5, xmin = yr - 0.5, y = value, height = 0, col = name), lwd = 1) +
     scale_color_manual(values = c('dodgerblue4', 'black', 'tomato3')) +
     # geom_step(data = pet_tbl, aes(x = yr, y = value_sum), direction = 'mid') +
-    labs(y = 'Temperature (°C)') +
+    labs(y = 'Temperature (\u00b0C)') +
     theme_bw() +
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
@@ -155,7 +155,7 @@ plot_climate_annual <- function(sim_verify) {
     select(name, value_sum)
   gg_tmp_stat <- plot_stat_text(tmp_stat,
                                 vars = c('tmn day', 'tmpav', 'tmx day'),
-                                c(5,4,3), '°C', F, digit = 1)
+                                c(5,4,3), '\u00b0C', F, digit = 1)
   gg_slr_stat <- plot_stat_text(clim_data_annual, vars = c('solarad'),
                                 c(5), 'MJ m^-2', F)
 

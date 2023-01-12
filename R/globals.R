@@ -1,0 +1,8 @@
+utils::globalVariables(c("%&&%", "%//%", ".", "crop", "day", "ecanopy", "eplant", "esoil", "et",
+                         "hru", "hydro", "id", "jday", "lu_mgt", "mgt", "mon", "name", "op_data1",
+                         "op_data1_trig", "op_data3", "op_issue", "op_typ", "op_var", "operation",
+                         "pet", "phuplant", "plant_bioms", "plnt_com", "precip", "qtile", "rainfall",
+                         "rhum rm_skp", "schedule", "snofall", "snomlt", "soil", "solarad", "starts_with",
+                         "tile", "time_out", "tmn", "tmpav", "tmx", "topo", "val_max", "val_mean",
+                         "val_min", "value", "value_sum", "var", "var1", "var2", "var3", "var4", "var5",
+                         "wndspd", "yr", "rhum", "rm_skp"))
