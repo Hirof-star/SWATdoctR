@@ -1,25 +1,28 @@
 
 
-
+# to be done with the @ stuff
 library(data.table) # fread
 library(dplyr) # filter, %>%, slice, ranking/row_number
 library(tidyr) # unite
 
 
-# read the wb_aa file
-basin_wb_aa = fread(
-  "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_demo/basin_wb_aa.txt",
-  fill = TRUE
-)
+# this will need to be determined / passed
+PATH = "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_demo/"
 
-# The following is only required due to the poor formatting of the 
-# SWAT output file...
+# read the wb_aa file from its PATH
+basin_wb_aa = fread(paste0(PATH, "basin_wb_aa.txt"), fill = TRUE)
+
+# The following is only required due to the poor formatting of the SWAT output
+
 # change the column names to those of the second row in the text file. 
 colnames(basin_wb_aa) <- basin_wb_aa %>% slice(2) %>% unlist(., use.names = F)
+
 # add placeholder names for the last three columns which did not get a name
 colnames(basin_wb_aa)[c(47:49)] <- c("x", "y", "z")
-# remove rows 1 to 3, as they dont contain any real data
+
+# remove rows 1 to 3, as they don't contain any real data
 basin_wb_aa <- basin_wb_aa %>% filter(!row_number() %in% c(1:3))
+
 # Unite the last three rows into one string (as they were intended to be)
 # the new column will be named description and describes what the softcal
 # algorithm did in that step. (So its probably important).
