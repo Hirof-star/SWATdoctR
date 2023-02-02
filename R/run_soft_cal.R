@@ -6,6 +6,10 @@ library(dplyr) # filter, %>%, slice, ranking/row_number, tibble
 library(tidyr) # unite
 
 
+# note: for now this is only water balance.
+# once i finish water balance, ill add the crop routine.
+
+
 # this will need to be determined / passed
 path = "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_demo/"
 
@@ -18,8 +22,6 @@ download_sft_files <- function(path) {
   required_files = c("codes.sft", "wb_parms.sft")
 
   # "water_balance.sft" currently does not exist on bitbucket but needs to be downloaded!!
-
-
 
   # I hope this remains constant for all the files???
   # or can we host this on our own gitlab?
@@ -47,18 +49,75 @@ download_sft_files <- function(path) {
   }
 }
 
+# changes the file.cio to enable soft calibration
+enable_sft <- function(path) {
+  # read the file.cio in
+  file.cio = readLines(con = paste0(path, "file.cio"))
+  # grab the 22nd line
+  file_cio_line_22 = file.cio[22]
+
+  # split that line based of white space
+  line22 = file_cio_line_22 %>% strsplit("\\s+") %>% unlist()
+
+  # replace the the column values 4,5,6 with the sft file names
+  line22[4] = "codes.sft"
+  line22[5] = "wb_parms.sf"
+  line22[6] = "water_balanbce.sft"
+
+  # merge them back together
+  new_line22 = paste(line22, collapse = "   ")
+
+  # replace the old line with the new line
+  file.cio[22] = new_line22
+
+  # write the modified file.cio
+  writeLines(text = file.cio, con = paste(path, "file.cio"))
+
+  print("soft cal enabled")
+}
+
+# changes the file.cio to disable soft calibration
+disable_sft <- function(path) {
+  # read the file.cio in
+  file.cio = readLines(con = paste0(path, "file.cio"))
+  # grab the 22nd line
+  file_cio_line_22 = file.cio[22]
+
+  # split that line based of white space
+  line22 = file_cio_line_22 %>% strsplit("\\s+") %>% unlist()
+
+  # replace the the column values 4,5,6 with null to disable soft-cal
+  line22[4] = "null"
+  line22[5] = "null"
+  line22[6] = "null"
+
+  # merge them back together
+  new_line22 = paste(line22, collapse = "   ")
+
+  # replace the old line with the new line
+  file.cio[22] = new_line22
+
+  # write the modified file.cio
+  writeLines(text = file.cio, con = paste(path, "file.cio"))
+
+  print("soft cal disabled")
+}
 
 # The following is only required due to the poor formatting of the SWAT output
 read_wb_aa <- function(path){
   # read the wb_aa file from its PATH
   basin_wb_aa = fread(paste0(path, "basin_wb_aa.txt"), fill = TRUE, )
 
-
   # change the column names to those of the second row in the text file.
   colnames(basin_wb_aa) <- basin_wb_aa %>% slice(2) %>% unlist(., use.names = F)
 
-  # add placeholder names for the last three columns which did not get a name
-  colnames(basin_wb_aa)[c(47:49)] <- c("x", "y", "z")
+  # some columns are not given a name (thanks..) need to figure out which ones
+  # they are...
+  no_name_columns = which(colnames(basin_wb_aa) == "")
+
+  # .. and add placeholder names for the last n columns which did not get a name
+  # if we don't do this, dplyr gets angry in the next line
+  colnames(basin_wb_aa)[no_name_columns] <- letters[1:length(no_name_columns)]
 
   # remove rows 1 to 3, as they don't contain any real data
   basin_wb_aa <- basin_wb_aa %>% filter(!row_number() %in% c(1:3))
@@ -69,22 +128,30 @@ read_wb_aa <- function(path){
   # the united columns are separated by a space (trailing space exists now)
   basin_wb_aa = tidyr::unite(data = basin_wb_aa,
                              col = description,
-                             c(47:49),
+                             no_name_columns,
                              sep = " ")
 
-
   # figure out which columns should be a double and not a string
-  # (everything except for name and decription columns)
+  # (everything except for name and description columns)
   dbl_cols = basin_wb_aa %>% colnames()
   dbl_cols= dbl_cols[! dbl_cols %in% c("name","description")]
-  # and convert them
+  # and convert them to numeric
   basin_wb_aa = basin_wb_aa %>% mutate_at(dbl_cols, as.numeric)
 
   return(basin_wb_aa %>% tibble())
 }
 
+
+# enables the soft calibration routine
+enable_sft(path)
+# downloads any missing sft file
 download_sft_files(path)
+# reads the results of the wb soft calibration
 df = read_wb_aa(path)
+# disables the soft-calibration routine
+disable_sft(path)
+
+
 
 
 
