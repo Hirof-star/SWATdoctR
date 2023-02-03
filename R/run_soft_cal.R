@@ -17,43 +17,43 @@
 #' @export
 #'
 soft_calibrate <- function(project_path, os, keep_folder = FALSE) {
-print("creating temp model directory")
-# create a temporary directory copy of the model setup
-temp_directory = build_model_run(project_path)
+  print("creating temp model directory")
+  # create a temporary directory copy of the model setup
+  temp_directory = build_model_run(project_path)
 
 
-print("downloading sft files")
-# downloads any missing sft file
-download_sft_files(temp_directory)
+  print("downloading sft files")
+  # downloads any missing sft file
+  download_sft_files(temp_directory)
 
-print("enabaling soft-cal routine")
-# enables the soft calibration routine
-toggle_sft(temp_directory, switch = "on")
+  print("enabaling soft-cal routine")
+  # enables the soft calibration routine
+  toggle_sft(temp_directory, switch = "on")
 
-print("changing the WB parms")
-# modify the wb parms
-modify_wb_parms(temp_directory)
+  print("changing the WB parms")
+  # modify the wb parms
+  modify_wb_parms(temp_directory)
 
-print("finding swat.exe")
-# copied from swat verify (do i need to import this?)
-exepath = find_swat_exe(project_path = path, os = os)
+  print("finding swat.exe")
+  # copied from swat verify (do i need to import this?)
+  exepath = find_swat_exe(project_path = path, os = os)
 
-print("running SWAT+ with soft-calibration routine")
-# copied from swat verify (do i need to import this?)
-msg <- run(run_os(exe = exepath , os = os),
-           wd = temp_directory,
-           error_on_status = FALSE)
+  print("running SWAT+ with soft-calibration routine")
+  # copied from swat verify (do i need to import this?)
+  msg <- run(run_os(exe = exepath , os = os),
+             wd = temp_directory,
+             error_on_status = FALSE)
 
-print("disabling the SFT routine")
-# disables the soft-calibration routine
-toggle_sft(temp_directory, switch = "off")
+  print("disabling the SFT routine")
+  # disables the soft-calibration routine
+  toggle_sft(temp_directory, switch = "off")
 
-print("reading results")
-# reads the results of the wb soft calibration
-df = read_wb_aa(temp_directory)
+  print("reading results")
+  # reads the results of the wb soft calibration
+  df = read_wb_aa(temp_directory)
 
-print("returning results..")
-return(df)
+  print("returning results..")
+  return(df)
 }
 
 #' downloads the required .sft files from some source
@@ -205,7 +205,7 @@ read_wb_aa <- function(path) {
 
 
   # read the wb_aa file from its PATH
-  basin_wb_aa = fread(paste0(path, "basin_wb_aa.txt"), fill = TRUE,)
+  basin_wb_aa = fread(paste0(path, "basin_wb_aa.txt"), fill = TRUE, )
 
   # change the column names to those of the second row in the text file.
   colnames(basin_wb_aa) <-
@@ -292,23 +292,17 @@ modify_wb_parms <- function(path) {
 
 }
 
-
-
 # notes  -----
 #
 # I hope my documentation makes it fairly clear what it is doing.
 #
 # Some things need to still be done:
 #
-# - Convert into "package" condition
-#
-# - is my usage of build_model_run() correct?
-#
-# - is my usage of your functions from swat_verify correct? [find_swat_exe,
-#   run(run_os())]? Do i need to import them somehow?
+# - is my usage of build_model_run(), find_swat_exe()  run(run_os()) correct?
+#   and do i need to import them somehow?
 #
 # - currently the only water_balance.sft parameters that are changeable are the
-#   ones natalja recomended to change in the protocol -- should all of them be
+#   ones natalja recommended to change in the protocol -- should all of them be
 #   editable? I can do that no problem, but we should think about how we want
 #   the user to enter that (same goes for the wb_parms.sft, which i havent impl-
 #   -emented yet)
@@ -317,22 +311,23 @@ modify_wb_parms <- function(path) {
 # - What to do with the results? just return the formatted basin_wb_aa.txt? or
 #   should some sort of visualization be implemented
 #
-# - We can remove all those print statements, they're just a placeholder
+# - We can remove all those print statements, they're just a for diagnostics
 #
 # - the water_balance.sft file is still missing from the bitbucket... Do we want
 #   to host the files on our own Gitlab? or continue to download from Bitbucket?
 #   or host the files within the package itself? Idk -- your call!
-
-# Path: path to SWAT+ directory
-# OS: operating system. only tested on "windows"
+#
+# - Rename the function to something like "run_swat_soft_calibration()?
+#   - and rename the script file to match?
 
 # code to be executed: -----
+
 # path = "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_demo/"
-#
+
 # basin_wb_aa <- soft_calibrate(path, "windows")
-#
+
 # basin_wb_aa %>% ggplot() + geom_col(mapping = aes(x = description, y = wateryld))
-#
+
 
 # Next steps: ------
 # Implement the crop yield soft cal routine
@@ -340,4 +335,3 @@ modify_wb_parms <- function(path) {
 # Allow the user to keep or discard any changes made
 #   if(!keep_folder) unlink(run_path, recursive = TRUE, force = TRUE)
 # ....
-
