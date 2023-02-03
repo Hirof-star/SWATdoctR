@@ -52,6 +52,12 @@ soft_calibrate <- function(project_path, os, keep_folder = FALSE) {
   # reads the results of the wb soft calibration
   df = read_wb_aa(temp_directory)
 
+  # delete the temp directory if the user does not want to keep it.
+  if (keep_folder == FALSE) {
+    print("deleting temporary directory")
+    unlink(temp_directory, recursive = TRUE, force = TRUE)
+  }
+
   print("returning results..")
   return(df)
 }
@@ -294,6 +300,8 @@ modify_wb_parms <- function(path) {
 #
 # - is my usage of build_model_run(), find_swat_exe()  run(run_os()) correct?
 #   and do i need to import them somehow?
+#   - maybe i need to use a modified version of build_model_run so that the file
+#     path is not ".run_verify"?
 #
 # - currently the only water_balance.sft parameters that are changeable are the
 #   ones natalja recommended to change in the protocol -- should all of them be
@@ -313,17 +321,13 @@ modify_wb_parms <- function(path) {
 #
 # - Rename the function to something like "run_swat_soft_calibration()?
 #   - and rename the script file to match?
-#
-# - Allow the user to keep or discard any changes made
-#   if(!keep_folder) unlink(run_path, recursive = TRUE, force = TRUE)
 
 # code to be executed: -----
-
-# path = "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_demo/"
-
-# basin_wb_aa <- soft_calibrate(path, "windows")
-
-# basin_wb_aa %>% ggplot() + geom_col(mapping = aes(x = description, y = wateryld))
+# (temp, not in this script obviously -- just for testing)
+library(dplyr);library(data.table);library(processx);library(tidyr);library(ggplot2)
+path = "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_demo/"
+basin_wb_aa <- soft_calibrate(project_path = path, os = "windows", keep_folder = TRUE)
+basin_wb_aa %>% ggplot() + geom_col(mapping = aes(x = description, y = wateryld))
 
 # Next steps: ------
 # Implement the crop yield soft cal routine
