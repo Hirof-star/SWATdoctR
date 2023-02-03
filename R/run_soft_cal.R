@@ -4,7 +4,7 @@
 library(data.table) # fread
 library(dplyr) # filter, %>%, slice, ranking/row_number, tibble
 library(tidyr) # unite
-
+library(processx) # run
 
 # note: for now this is only water balance.
 # once i finish water balance, ill add the crop routine.
@@ -16,6 +16,15 @@ path = "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_
 # downloads the required .sft files from some source
 # printing just for diagnostics, maybe remove.
 download_sft_files <- function(path) {
+
+  # TEMP until the water_balance.sft file is hosted
+  if("water_balance.sft" %in% list.files(path) == FALSE){
+    stop("water_balance.sft needs to present in your directory TEMP: for now...")
+  }
+
+  # add a backslash onto the path, so its compatible with build_model_run()
+  path = paste0(path,"/")
+
 
   # this could be passed as a parameter
   required_files = c("codes.sft", "wb_parms.sft")
@@ -52,6 +61,9 @@ download_sft_files <- function(path) {
 toggle_sft <- function(path, switch){
   # file.cio modifications
 
+  # add a backslash onto the path, so its compatible with build_model_run()
+  path = paste0(path,"/")
+
   # read the file.cio in
   file.cio = readLines(con = paste0(path, "file.cio"))
   # grab the 22nd line
@@ -64,7 +76,7 @@ toggle_sft <- function(path, switch){
     # replace the the column values 4,5,6 with the sft file names
     line22[4] = "codes.sft"
     line22[5] = "wb_parms.sf"
-    line22[6] = "water_balanbce.sft"
+    line22[6] = "water_balance.sft"
   }
 
   if(switch == "off"){
@@ -125,6 +137,11 @@ toggle_sft <- function(path, switch){
 
 # The following is only required due to the poor formatting of the SWAT output
 read_wb_aa <- function(path){
+
+  # add a backslash onto the path, so its compatible with build_model_run()
+  path = paste0(path, "/")
+
+
   # read the wb_aa file from its PATH
   basin_wb_aa = fread(paste0(path, "basin_wb_aa.txt"), fill = TRUE, )
 
@@ -161,10 +178,14 @@ read_wb_aa <- function(path){
   return(basin_wb_aa %>% tibble())
 }
 
+
 # Modify ‘water_balance.sft’ with your values for fractions. Only the values under the WYR and
 # BFR columns need to be modified (see Soft data). Make sure to count the columns, as the file
 # is a free-format. Save the edits.
 modify_wb_parms <- function(path) {
+
+  # add a backslash onto the path, so its compatible with build_model_run()
+  path = paste0(path,"/")
 
   # ask user for parameter values (could be changed to whatever method)
   WYLD_PCP_Ratio = readline(prompt = "Enter your value for WYLD_PCP_Ratio: ") %>% as.numeric()
@@ -201,25 +222,86 @@ modify_wb_parms <- function(path) {
 
 }
 
-
-# enables the soft calibration routine
-toggle_sft(path, switch = "on")
-# downloads any missing sft file
-download_sft_files(path)
-# modify the wb parms
-modify_wb_parms(path)
-# reads the results of the wb soft calibration
-df = read_wb_aa(path)
-# disables the soft-calibration routine
-toggle_sft(path, switch = "off")
+# runs SWAT+ (add all the sub functions in here)
+soft_calibrate <- function(path, os){
+  print("creating temp model directory")
+  # create a temporary directory copy of the model setup
+  temp_directory = build_model_run(path)
 
 
+  print("downloading sft files")
+  # downloads any missing sft file
+  download_sft_files(temp_directory)
+
+  print("enabaling soft-cal routine")
+  # enables the soft calibration routine
+  toggle_sft(temp_directory, switch = "on")
+
+  print("changing the WB parms")
+  # modify the wb parms
+  modify_wb_parms(temp_directory)
+
+  print("finding swat.exe")
+  # copied from swat verify (do i need to import this?)
+  exepath = find_swat_exe(project_path = path, os = os)
+
+  print("running SWAT+ with soft-calibration routine")
+  # copied from swat verify (do i need to import this?)
+  msg <- run(run_os(exe =exepath , os = os), wd = temp_directory,
+             error_on_status = FALSE)
+
+  print("disabling the SFT routine")
+  # disables the soft-calibration routine
+  toggle_sft(temp_directory, switch = "off")
+
+  print("reading results")
+  # reads the results of the wb soft calibration
+  df = read_wb_aa(temp_directory)
+
+  print("returning results..")
+  return(df)
+}
 
 
+# hey christoph.. so this is the full function.
+# I hope my documentation makes it fairly clear what it is doing.
+#
+# Some things need to still be done:
+#
+# - Convert into "package" condition
+#
+# - is my usage of build_model_run() correct?
+#
+# - is my usage of your functions from swat_verify correct? [find_swat_exe,
+#   run(run_os())]? Do i need to import them somehow?
+#
+# - currently the only water_balance.sft parameters that are changeable are the
+#   ones natalja recomended to change in the protocol -- should all of them be
+#   editable? I can do that no problem, but we should think about how we want
+#   the user to enter that (same goes for the wb_parms.sft, which i havent impl-
+#   -emented yet)
+#     -- one way would be just to have them pass the values in the function call
+#
+# - What to do with the results? just return the formatted basin_wb_aa.txt? or
+#   should some sort of visualization be implemented
+#
+# - We can remove all those print statements, they're just a placeholder
+#
+# - the water_balance.sft file is still missing from the bitbucket... Do we want
+#   to host the files on our own Gitlab? or continue to download from Bitbucket?
+#   or host the files within the package itself? Idk -- your call!
+
+# Path: path to SWAT+ directory
+# OS: operating system. only tested on "windows"
+basin_wb_aa <-soft_calibrate(path, "windows")
+
+basin_wb_aa %>% ggplot() + geom_col(mapping = aes(x = description, y = wateryld))
 
 
+# Next steps:
+# Implement the crop yield soft cal routine
+# Link WB and crop yield routines (iteratively)
+# Allow the user to keep or discard any changes made
+#   if(!keep_folder) unlink(run_path, recursive = TRUE, force = TRUE)
+# ....
 
-library(ggplot2)
-ggplot(df)+geom_col(mapping = aes(x = description, y = wateryld ))
-
-df %>% tibble()
