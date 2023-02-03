@@ -1,5 +1,4 @@
 
-
 # I'll make it package compatible later, once its working.
 library(data.table) # fread
 library(dplyr) # filter, %>%, slice, ranking/row_number, tibble
@@ -16,14 +15,13 @@ path = "C:/Users/NIBIO/Documents/GitLab/optain-swat/SWAT_softcal/swatplus_rev60_
 # downloads the required .sft files from some source
 # printing just for diagnostics, maybe remove.
 download_sft_files <- function(path) {
-
   # TEMP until the water_balance.sft file is hosted
-  if("water_balance.sft" %in% list.files(path) == FALSE){
+  if ("water_balance.sft" %in% list.files(path) == FALSE) {
     stop("water_balance.sft needs to present in your directory TEMP: for now...")
   }
 
   # add a backslash onto the path, so its compatible with build_model_run()
-  path = paste0(path,"/")
+  path = paste0(path, "/")
 
 
   # this could be passed as a parameter
@@ -58,11 +56,11 @@ download_sft_files <- function(path) {
 }
 
 # toggles the soft calibration routine either ON or OFF
-toggle_sft <- function(path, switch){
+toggle_sft <- function(path, switch) {
   # file.cio modifications
 
   # add a backslash onto the path, so its compatible with build_model_run()
-  path = paste0(path,"/")
+  path = paste0(path, "/")
 
   # read the file.cio in
   file.cio = readLines(con = paste0(path, "file.cio"))
@@ -72,14 +70,14 @@ toggle_sft <- function(path, switch){
   # split that line based of white space
   line22 = file_cio_line_22 %>% strsplit("\\s+") %>% unlist()
 
-  if(switch == "on"){
+  if (switch == "on") {
     # replace the the column values 4,5,6 with the sft file names
     line22[4] = "codes.sft"
     line22[5] = "wb_parms.sf"
     line22[6] = "water_balance.sft"
   }
 
-  if(switch == "off"){
+  if (switch == "off") {
     # replace the the column values 4,5,6 with the sft file names
     line22[4] = "null"
     line22[5] = "null"
@@ -104,7 +102,7 @@ toggle_sft <- function(path, switch){
 
   # find out what the column index is of HYD_HRU
   line2 = codes.sft[2] %>% strsplit("\\s+") %>% unlist()
-  hyd_hru_col_index = which(line2=="HYD_HRU")
+  hyd_hru_col_index = which(line2 == "HYD_HRU")
 
   line3 = codes.sft[3] %>% strsplit("\\s+") %>% unlist()
 
@@ -136,17 +134,17 @@ toggle_sft <- function(path, switch){
 }
 
 # The following is only required due to the poor formatting of the SWAT output
-read_wb_aa <- function(path){
-
+read_wb_aa <- function(path) {
   # add a backslash onto the path, so its compatible with build_model_run()
   path = paste0(path, "/")
 
 
   # read the wb_aa file from its PATH
-  basin_wb_aa = fread(paste0(path, "basin_wb_aa.txt"), fill = TRUE, )
+  basin_wb_aa = fread(paste0(path, "basin_wb_aa.txt"), fill = TRUE,)
 
   # change the column names to those of the second row in the text file.
-  colnames(basin_wb_aa) <- basin_wb_aa %>% slice(2) %>% unlist(., use.names = F)
+  colnames(basin_wb_aa) <-
+    basin_wb_aa %>% slice(2) %>% unlist(., use.names = F)
 
   # some columns are not given a name (thanks..) need to figure out which ones
   # they are...
@@ -154,7 +152,8 @@ read_wb_aa <- function(path){
 
   # .. and add placeholder names for the last n columns which did not get a name
   # if we don't do this, dplyr gets angry in the next line
-  colnames(basin_wb_aa)[no_name_columns] <- letters[1:length(no_name_columns)]
+  colnames(basin_wb_aa)[no_name_columns] <-
+    letters[1:length(no_name_columns)]
 
   # remove rows 1 to 3, as they don't contain any real data
   basin_wb_aa <- basin_wb_aa %>% filter(!row_number() %in% c(1:3))
@@ -171,7 +170,7 @@ read_wb_aa <- function(path){
   # figure out which columns should be a double and not a string
   # (everything except for name and description columns)
   dbl_cols = basin_wb_aa %>% colnames()
-  dbl_cols= dbl_cols[! dbl_cols %in% c("name","description")]
+  dbl_cols = dbl_cols[!dbl_cols %in% c("name", "description")]
   # and convert them to numeric
   basin_wb_aa = basin_wb_aa %>% mutate_at(dbl_cols, as.numeric)
 
@@ -183,9 +182,8 @@ read_wb_aa <- function(path){
 # BFR columns need to be modified (see Soft data). Make sure to count the columns, as the file
 # is a free-format. Save the edits.
 modify_wb_parms <- function(path) {
-
   # add a backslash onto the path, so its compatible with build_model_run()
-  path = paste0(path,"/")
+  path = paste0(path, "/")
 
   # ask user for parameter values (could be changed to whatever method)
   WYLD_PCP_Ratio = readline(prompt = "Enter your value for WYLD_PCP_Ratio: ") %>% as.numeric()
@@ -218,12 +216,16 @@ modify_wb_parms <- function(path) {
   # and write it
   writeLines(text = water_balance_sft, con = paste0(path, "water_balance.sft"))
 
-  paste("water balance parameters updated with values:",WYLD_PCP_Ratio, Subsurface_WYLD_Ratio ) %>% print()
+  paste(
+    "water balance parameters updated with values:",
+    WYLD_PCP_Ratio,
+    Subsurface_WYLD_Ratio
+  ) %>% print()
 
 }
 
 # runs SWAT+ (add all the sub functions in here)
-soft_calibrate <- function(path, os){
+soft_calibrate <- function(path, os) {
   print("creating temp model directory")
   # create a temporary directory copy of the model setup
   temp_directory = build_model_run(path)
@@ -247,7 +249,8 @@ soft_calibrate <- function(path, os){
 
   print("running SWAT+ with soft-calibration routine")
   # copied from swat verify (do i need to import this?)
-  msg <- run(run_os(exe =exepath , os = os), wd = temp_directory,
+  msg <- run(run_os(exe = exepath , os = os),
+             wd = temp_directory,
              error_on_status = FALSE)
 
   print("disabling the SFT routine")
@@ -293,7 +296,7 @@ soft_calibrate <- function(path, os){
 
 # Path: path to SWAT+ directory
 # OS: operating system. only tested on "windows"
-basin_wb_aa <-soft_calibrate(path, "windows")
+basin_wb_aa <- soft_calibrate(path, "windows")
 
 basin_wb_aa %>% ggplot() + geom_col(mapping = aes(x = description, y = wateryld))
 
@@ -304,4 +307,3 @@ basin_wb_aa %>% ggplot() + geom_col(mapping = aes(x = description, y = wateryld)
 # Allow the user to keep or discard any changes made
 #   if(!keep_folder) unlink(run_path, recursive = TRUE, force = TRUE)
 # ....
-
