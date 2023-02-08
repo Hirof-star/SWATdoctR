@@ -29,6 +29,17 @@ plot_variable_at_harvkill <- function(sim_verify, variable, years = 1900:2100) {
     ungroup() %>%
     filter(n == 2, operation == 'HARVEST')
 
+  ##Just in case dates of harvest and kill differ a bit
+  if(dim(tbl_harv)[1] == 0){
+    tbl_harv <- sim_verify$mgt_out %>%
+      filter(year %in% years) %>%
+      filter(operation %in% c('HARVEST', 'KILL')) %>%
+      group_by(hru,year, mon) %>%
+      mutate(n = n()) %>%
+      ungroup() %>%
+      filter(n == 2, operation == 'HARVEST')
+  }
+
   if(variable == 'phu') {
     tbl_harv <- tbl_harv %>%
       select(op_typ, phuplant) %>%
