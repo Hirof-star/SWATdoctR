@@ -75,4 +75,3 @@ hide_show <- function(graph){
                   args = list("visible", "legendonly"),
                   label = "hide all")))))
 }
-
