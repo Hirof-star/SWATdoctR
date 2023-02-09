@@ -250,7 +250,7 @@ plot_monthly_snow <- function(sim_verify) {
 #' are "median", "sum", etc). \code{Default = "mean"}
 #' @importFrom lubridate floor_date
 #' @importFrom plotly plot_ly layout
-#' @importFrom dplyr %>% rename summarize mutate group_by arrange
+#' @importFrom dplyr %>% rename summarise mutate group_by arrange
 #' @return plotly figure object
 #' @export
 #'
@@ -270,7 +270,7 @@ plot_basin_var <- function(sim_verify, var, period = "day", fn_summarize = "mean
   df <- df[c("Date", var)] %>%
     rename(Values = 2) %>%
     group_by(Date) %>%
-    summarize(Values = get(fn_summarize)(Values))
+    summarise(Values = get(fn_summarize)(Values))
   ##Plotting
   plot_ly(df %>% arrange(Date), x=~Date, y=~Values, name = var, type = 'scatter', mode = 'lines',
           connectgaps = FALSE) %>% layout(showlegend = FALSE) %>%

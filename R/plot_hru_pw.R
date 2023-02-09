@@ -126,7 +126,7 @@ print_avannual_qtile <- function(sim_verify,
 #' @return plotly figure object
 #' @importFrom lubridate floor_date
 #' @importFrom plotly plot_ly layout
-#' @importFrom dplyr %>% rename summarize mutate group_by arrange
+#' @importFrom dplyr %>% rename summarise mutate group_by arrange
 #' @export
 #'
 #' @examples
@@ -144,7 +144,7 @@ plot_hru_var <- function(sim_verify, hru_id, var, period = "day", fn_summarize =
     rename(Values = 3) %>%
     mutate(unit = paste('hru:', unit)) %>%
     group_by(unit, Date) %>%
-    summarize(Values = get(fn_summarize)(Values))
+    summarise(Values = get(fn_summarize)(Values))
 
   ##Plotting
   plot_ly(df %>% arrange(Date), x=~Date, y=~Values,  color = ~factor(unit), colors = "Set2", type = 'scatter', mode = 'lines',
