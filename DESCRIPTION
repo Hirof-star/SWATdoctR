@@ -23,7 +23,8 @@ Imports:
   tibble,
   tidyr,
   tidyselect,
-  plotly
+  plotly,
+  utils
 Suggests:
   datasets,
   stats

@@ -165,6 +165,7 @@ build_wb_softcal_input <- function(run_path, wateryield_ratio, baseflow_ratio) {
 #' @param path text string to (temporary) directory
 #' @keywords internal
 #' @importFrom dplyr %>%
+#' @importFrom utils download.file
 #'
 download_sft_files <- function(path) {
   # "water_balance.sft" currently does not exist on bitbucket but needs to be downloaded!!
@@ -293,7 +294,7 @@ toggle_sft <- function(path, switch) {
 #' @keywords internal
 #' @importFrom data.table fread
 #' @importFrom tidyr unite
-#' @importFrom dplyr %>% slice filter mutate_all tibble
+#' @importFrom dplyr %>% slice filter mutate_all tibble row_number mutate_at
 #'
 #' @return returns a tibble of the formatted output of the soft-cal routine
 #'

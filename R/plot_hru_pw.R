@@ -186,3 +186,94 @@ plot_hru_var_aa <- function(sim_verify, lum = NULL, mgt = NULL, soil = NULL){
   return(fig)
 }
 
+#' Plot simulated variables of water partition of filtered HRUs saved in hru_wb_aa
+#'
+#' @param sim_verify Simulation output of the function \code{run_swat_verification()}.
+#'   To plot the heat units at least the output option \code{outputs = 'wb'} must
+#'   be set in  \code{run_swat_verification()}
+#' @param tile Optional Boolean TRUE for selecting HRUs with working tiles, FALSE - without working tiles and NULL for selecting all HRUs.
+#' @param lum Optional character vector with landuse.lum labels
+#' @param mgt Optional character vector with management labels as defined in management.sch.
+#' @param soil Optional character vector with soil type labels as defined in the soil data.
+#' @param exclude_lum Character vector to define land uses which are excluded
+#'   in the printed table.
+#' @return plotly figure object
+#' @importFrom dplyr %>% mutate group_by rename left_join summarise_all filter select
+#' @importFrom tidyr pivot_longer
+#' @importFrom plotly plot_ly layout subplot add_pie
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' plot_water_partition(sim_nostress, tile = TRUE)
+#' }
+
+plot_water_partition <- function(sim_verify, tile = TRUE, lum = NULL, mgt = NULL, soil = NULL, exclude_lum = c(
+  "urhd_lum", "urmd_lum", "urml_lum",
+  "urld_lum", "ucom_lum", "uidu_lum",
+  "utrn_lum", "uins_lum", "urbn_lum")){
+  df <- sim_verify$hru_wb_aa %>%
+    rename(id = unit) %>%
+    left_join(., sim_verify$lum_mgt, by = "id") %>%
+    filter(!lu_mgt %in% exclude_lum) %>%
+    select(id, et, surq_gen, latq, perc, qtile, lu_mgt, mgt, soil)
+  ##Filtering for selected tile, lum, mgt and soil options
+  if(!is.null(lum)) {
+    df <- df[df$lu_mgt %in% lum,]
+  }
+  if(!is.null(mgt)) {
+    df <- df[df$mgt %in% mgt,]
+  }
+  if(!is.null(soil)) {
+    df <- df[df$soil %in% soil,]
+  }
+  if(!is.null(tile)) {
+    if(tile == TRUE){
+      df <-  df[df$qtile > 0,]
+    } else if(tile == FALSE){
+      df <-  df[df$qtile == 0,]
+    } else {
+      stop("Wrong input!!! Valid 'tile' parameter could be only TRUE, FALSE or Null.")
+    }
+  }
+  ##Selecting only required variables
+  df <- df[c('et', 'surq_gen', 'latq', 'perc', 'qtile')] %>%
+    mutate(units = "mm") %>%
+    pivot_longer(!units, names_to = "var", values_to = "Values")
+  ##Setting colors for variables
+  pal <- c("blue", "green", "brown", "grey", "black")
+  df$var <- factor(df$var, levels = c("et", "surq_gen", "latq", "qtile", "perc"))
+  ##Preparing pie chart
+  pie_pl <- plot_ly(df[c("var", "Values")] %>%
+                      group_by(var) %>%
+                      summarise_all(mean) %>%
+                      mutate(Values = round(Values, 1),
+                             pal = factor(var, labels = pal)),
+                    values=~Values,  labels = ~var,
+                    hoverinfo = 'text',
+                    textinfo = 'percent',
+                    text = ~paste(var, Values, "mm/year"),
+                    marker = list(colors = pal,
+                                  line = list(color = '#FFFFFF', width = 1)),
+                    domain = list(x = c(0.6, 0.9),
+                                  y = c(0.0, 1)),
+                    showlegend = F) %>%
+    add_pie(hole = 0.3)
+  ##Preparing box plot
+  box_pl <- plot_ly(df[c("var", "Values")], x=~Values,  color = ~var,  type = "box",  colors = pal,
+                    showlegend = F) %>%
+    layout(yaxis = list(autorange = "reversed"))
+  ##Putting into one figure and annotations
+  fig <- subplot(box_pl, pie_pl, nrows = 1, margin = 0.05) %>%
+    layout(title = paste("Selected HRUs |",
+                         if(!is.null(tile)){paste0("tile drains ", tile, ",")},
+                         if(!is.null(lum)){paste0("lum - ", lum, ",")},
+                         if(!is.null(mgt)){paste0("mgt - ", mgt, ",")},
+                         if(!is.null(soil)){paste0("soil - ", soil)},"|"),
+           annotations = list(
+             list(x = 0.1 , y = 1, text = "a) Box plot for selected HRU's (mm/year)", showarrow = F, xref='paper', yref='paper'),
+             list(x = 0.8 , y = 1, text = "b) Mean results for selected HRU's", showarrow = F, xref='paper', yref='paper'))
+    )
+  options(warn = -1)
+  return(fig)
+}
