@@ -20,8 +20,7 @@ plot_ps <- function(sim_verify, conc = FALSE){
   if(!is.null(sim_verify$recall_yr)){
     df <- sim_verify$recall_yr[, -c(1:3,6)] %>%
       .[, colSums(.!= 0) > 0] %>%
-      mutate(yr = as.factor(yr),
-             name = gsub("hru00", "ps", name))
+      mutate(name = gsub("hru00", "ps", name))
     if(conc){
       df <- df %>%
         pivot_longer(-c(yr, name, flo), names_to = 'var', values_to = 'Values') %>%
@@ -43,13 +42,13 @@ plot_ps <- function(sim_verify, conc = FALSE){
                                TRUE ~  paste(var, "kg/y")))
     }
     fig <- ggplot(df, aes(x=yr, y=Values,  group=name, colour=name))+
-      geom_line(size=1.5)+
+      geom_line(size=1)+
       facet_wrap(~var, scales = "free_y")+
       labs(color='Point sources', x = 'Year') +
       theme_bw()+
-      theme(strip.background = element_rect(fill = "deepskyblue3", colour = "azure3"),
+      theme(strip.background = element_rect(fill = "grey50", colour = "grey80"),
             strip.text = element_text(color = "white", face="bold"),
-            panel.border = element_rect(colour = "azure3"),
+            panel.border = element_rect(colour = "grey80"),
             axis.text.x = element_text(angle = 25, hjust=1))
 
     return(fig)
