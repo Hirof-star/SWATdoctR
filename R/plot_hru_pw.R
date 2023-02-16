@@ -251,3 +251,62 @@ plot_water_partition <- function(sim_verify, tile = NULL, lum = NULL, mgt = NULL
   options(warn = -1)
   return(fig)
 }
+
+#' Aggregate and plot simulated variables saved in hru_pw_day
+#'
+#' @param sim_verify Simulation output of the function \code{run_swat_verification()}.
+#'   To plot the heat units at least the output option \code{outputs = 'mgt'} must
+#'   be set in  \code{run_swat_verification()}.
+#' @param hru_id Numeric vector with HRU ids for which variables should be plotted.
+#' @param var Character vector that defines the variable names that are plotted.
+#' @param title Character for title to be put in the figure.
+#' @param period (optional) character describing, which time interval to display (default is "day",
+#' other examples are "week", "month", etc). \code{Default = "day"}
+#' @param fn_summarize (optional) function to recalculate to time interval (default is "mean", other examples
+#' are "median", "sum", etc). \code{Default = "mean"}
+#' @param interactive (optional) Boolean TRUE to provide output as plotly object, FALSE - as ggplot.  \code{Default = "FALSE"}
+#' @return ggplot or plotly object
+#' @importFrom lubridate floor_date
+#' @importFrom plotly plot_ly layout subplot
+#' @importFrom dplyr %>% rename summarise mutate group_by arrange do
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' id <- get_hru_id_by_attribute(sim_nostress, "wwht_lum")
+#' plot_hru_pw(sim_nostress, sample(id$id, 10), "lai")
+#' plot_hru_pw(sim_nostress, hru_id = c(2, 10), var = c("lai", "bioms"),
+#' title = "My great figure", period = "year", fn_summarize = "mean", interactive = TRUE)
+#' }
+
+plot_hru_pw <- function(sim_verify, hru_id, var,  title = "", period = "day", fn_summarize = "mean", interactive = FALSE){
+  options(dplyr.summarise.inform = FALSE)
+  df <- sim_verify$hru_pw_day[sim_verify$hru_pw_day$unit %in% hru_id, c("unit", "yr", "mon", "day", var)]
+  ##Aggregating data by time step
+  df$Date<- floor_date(ISOdate(df$yr, df$mon, df$day), period)
+  df <- df[c("Date", "unit", var)] %>%
+    mutate(unit = paste('hru:', unit)) %>%
+    pivot_longer(., cols = - c(Date, unit), names_to = 'var', values_to = 'Values') %>%
+    group_by(unit, Date, var) %>%
+    summarise(Values = get(fn_summarize)(Values))
+  if(interactive){
+    fig <- df %>%
+      group_by(var) %>%
+      do(p=plot_ly(., x = ~Date, y = ~Values, color = ~factor(unit), text = ~var, textposition = 'outside', colors = "Set2", type = 'scatter', mode = 'lines', connectgaps = FALSE) %>%
+           layout(showlegend = FALSE, xaxis = list(title = "Date"), yaxis = list(title = paste(var, "variable values")))) %>%
+      subplot(nrows = ifelse(length(var) %/% 1.75<1, 1, length(var) %/% 1.75), shareX = TRUE, shareY = FALSE, titleY= TRUE, margin = c(0.1,0,0.1,0)) %>%
+      layout(title = title)
+  } else {
+    fig <- ggplot(df) +
+      geom_line(aes(x = Date, y = Values, color = unit, lty = unit)) +
+      labs(x = 'Date', color = 'HRU', lty = 'HRU', title=title) +
+      facet_grid(rows = vars(all_of(var)), scales = 'free_y', switch = 'y') +
+      theme_bw() +
+      theme(legend.position = 'bottom',
+            strip.background = element_blank(),
+            strip.placement = 'outside',
+            strip.text = element_text(face = 'bold'),
+            axis.title.y = element_blank())
+  }
+  return(fig)
+}
