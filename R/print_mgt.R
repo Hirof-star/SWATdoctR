@@ -92,8 +92,35 @@ report_mgt <- function(sim_verify, write_report = FALSE) {
     mutate(op_typ = str_sub(op_typ, 1, 4) %>%  tolower(.),
            op_typ = ifelse(op_typ == 'plan', 'plnt', op_typ))
 
-  schdl_join <- full_join(schdl_mgt, mgt_i,
-                          by = c("schedule", "year",  "mon", "day", "op_typ", "op_data1" = "op_data1_trig"), keep = TRUE) %>%
+  ##Case for PHU scheduling
+  if(any(schdl_mgt$hu_sch>0)){
+    schdl_mgt_in <- schdl_mgt %>%
+      group_by(schedule, year) %>%
+      mutate(year = year - yr_start + 1) %>%
+      mutate(id = row_number())
+
+    df <- NULL
+    for(sch in unique(schdl_mgt_in$schedule)){ ##For each schedule in schdl_mgt
+      sch1 <- schdl_mgt_in[schdl_mgt_in$schedule == sch,] ##data separated
+      counter_max <- max(sch1$year) ##counter set
+      counter <- counter_min <- 1
+      for (n in seq(yr_start,max(sim_verify$mgt_out$year),1)){ ##For each modeling year
+        d_copy <- sch1[sch1$year == counter,]
+        d_copy$year <- n
+        if(!is.null(df)){df <- bind_rows(df, d_copy)}else{df <- d_copy}
+        if(counter>=counter_max){counter<-counter_min}else{counter<-counter+1} ##Counter for schedules with more than 1 year
+      }
+    }
+    schdl_join <- full_join(df, mgt_i %>%
+                              group_by(schedule, year) %>%
+                              mutate(id = row_number()),
+                            by = c("schedule", "year", "id", "op_typ", "op_data1" = "op_data1_trig"), keep = TRUE)
+  } else {
+    schdl_join <- full_join(schdl_mgt, mgt_i,
+                            by = c("schedule", "year",  "mon", "day", "op_typ", "op_data1" = "op_data1_trig"), keep = TRUE)
+  }
+
+  schdl_join <- schdl_join %>%
     select(-ends_with(".y")) %>%
     rename_with(~str_remove(., '.x')) %>%
     select(schedule, year, mon, day, op_typ, op_data1_trig, starts_with('op_data')) %>%
