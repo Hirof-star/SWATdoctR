@@ -6,7 +6,7 @@
 </style>
 
 ---
-title: "Your title"
+title: "Jeziorka catchment"
 author: "name surname"
 affiliation: "your affiliation"
 email: "your@email"
@@ -41,7 +41,7 @@ add_kill_op(model_path)
 ##Running loop to get and save run_swat_verification function output for different plant stress options
 for(ns in c(0:2)){
   saveRDS(run_swat_verification(project_path = model_path, outputs = c('wb', 'mgt', 'plt'), 
-                                nostress = ns, keep_folder = TRUE), file = rpath[[ns]])}
+                                nostress = ns, keep_folder = TRUE), file = rpath[[ns+1]])}
 ```
 
 Before starting model verification `run_swat_verification()`results should be loaded in the memory. The first two steps require function results without plant stresses activate (`nostress = 1`).
@@ -149,7 +149,7 @@ if(length(mgt_report$schedule)>=sel_nb){
 
 Selected case can be examined in figures plotting selected HRU variables. Following variables are available for plotting.
 
-- *lai m^2/m^2 |average leaf area index during timestep*
+- *lai m^2^/m^2^ |average leaf area index during timestep*
 - *bioms kg/ha |average total plant biomass during timestep*
 - *yield kg/ha |harvested biomass yield (dry weight) during timestep*
 - *residue kg/ha |average surface residue cover during timestep*

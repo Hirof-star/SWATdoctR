@@ -110,15 +110,28 @@ print_avannual_qtile <- function(sim_verify,
 plot_qtile <- function(sim_verify, exclude_lum = c("urhd_lum", "urmd_lum", "urml_lum",
                                                    "urld_lum", "ucom_lum", "uidu_lum",
                                                    "utrn_lum", "uins_lum", "urbn_lum")){
-  df <- print_avannual_qtile(sim_verify, exclude_lum)
+  df <- sim_verify$hru_wb_aa %>%
+    rename(id = unit) %>%
+    left_join(., sim_verify$lum_mgt, by = "id") %>%
+    filter(tile != 'null')
+
+  hru_frac <- paste0(as.character(round(100*count(df)/count(sim_verify$hru_wb_aa),2)), " % HRUs are drained in this catchment.")
+
+  df <- df %>%
+    filter(!lu_mgt %in% exclude_lum) %>%
+    select(id, qtile, lu_mgt, mgt, soil) %>%
+    arrange(qtile, id)
 
   fig <- ggplot(df, aes(x=qtile)) +
-    geom_histogram(aes(y=..density..), color="black", fill="blue", breaks = seq(min(df$qtile), max(df$qtile), 10))+
+    geom_histogram(aes(y=after_stat(density)), color="black", fill="blue", breaks = seq(min(df$qtile), max(df$qtile), 10))+
     geom_density(alpha=.3, fill="white", linewidth = 1, color = "grey25", linetype = "twodash")+
-    labs(title = "Tile drain flow density mm/year")+
+    labs(title = "Tile drain flow density mm/year",
+         subtitle = hru_frac,
+         caption = "Data in the figure represents only HRUs with active tile drainage.")+
     theme_bw()+
     theme(panel.border = element_blank(),
           axis.line = element_line(color='black'),
           axis.title.x=element_blank())
+
   return(fig)
 }
