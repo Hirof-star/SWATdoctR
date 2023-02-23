@@ -24,25 +24,27 @@ plot_ps <- function(sim_verify, conc = FALSE){
     if(conc){
       df <- df %>%
         pivot_longer(-c(yr, name, flo), names_to = 'var', values_to = 'Values') %>%
-        mutate(Values = ifelse(var == "sed", (Values/flo)*(1000000/(24*69*60*365.25)),
-                               (Values/flo)*(1000/(24*69*60*365.25)))) %>%
+        mutate(Values = ifelse(var == "sed", 1000000*Values/flo, 1000*Values/flo)) %>%
         select(yr, name, var, Values) %>%
-        bind_rows(df[c("yr", "name", "flo")] %>% mutate(var = "flo") %>% rename(Values = flo)) %>%
+        bind_rows(df[c("yr", "name", "flo")] %>%
+                    mutate(var = "flo") %>%
+                    rename(Values = flo) %>%
+                    mutate(Values = Values/(24*60*60*365.25))) %>%
         mutate(var = case_when(var == 'flo' ~ "flo m3/s",
-                               var %in% c("orgn", "no3", "nh3", "no2") ~ paste(var, "N mg/y"),
-                               var %in% c("sedp", "solp") ~ paste(var, "P mg/y"),
+                               var %in% c("orgn", "no3", "nh3", "no2") ~ paste(var, "N mg/l"),
+                               var %in% c("sedp", "solp") ~ paste(var, "P mg/l"),
                                TRUE ~  paste(var, "mg/l")))
     } else {
       df <- df %>%
         pivot_longer(-c(yr, name), names_to = 'var', values_to = 'Values') %>%
-        mutate(var = case_when(var == 'flo' ~ "flo m3/s",
+        mutate(var = case_when(var == 'flo' ~ "flo m3/d",
                                var == 'sed' ~ "sed t/y",
                                var %in% c("orgn", "no3", "nh3", "no2") ~ paste(var, "N kg/y"),
                                var %in% c("sedp", "solp") ~ paste(var, "P kg/y"),
                                TRUE ~  paste(var, "kg/y")))
     }
     fig <- ggplot(df, aes(x=yr, y=Values,  group=name, colour=name))+
-      geom_line(size=1)+
+      geom_line(linewidth=1)+
       facet_wrap(~var, scales = "free_y")+
       labs(color='Point sources', x = 'Year') +
       theme_bw()+
