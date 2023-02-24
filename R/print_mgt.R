@@ -68,12 +68,17 @@ report_mgt <- function(sim_verify, write_report = FALSE) {
            rm_skp = ifelse(op_typ == 'skip' &
                              rm_skp  != 'skip' |
                              is.na(rm_skp), TRUE, FALSE)) %>%
+    mutate(year = ifelse(rm_skp, 1, 0),
+           year = lag(year, default = 0)) %>%
     filter(!rm_skp) %>%
     select(-rm_skp) %>%
-    mutate(year = c(NA, diff(mon)),
-           year = ifelse(is.na(year) | year >= 0, 0, 1),
+    ungroup(.) %>%
+    mutate(mmdd = 100*mon + day,
+           mmdd = c(0, diff(mmdd)),
+           mmdd = ifelse(mmdd >= 0, 0, 1),
+           year = ifelse(year ==1 | mmdd == 1, 1, 0),
            year = cumsum(year) + yr_start) %>%
-    ungroup(.)
+    select(-mmdd)
 
   mgt_lbl <- unique(schdl_mgt$schedule)
 
@@ -128,36 +133,41 @@ report_mgt <- function(sim_verify, write_report = FALSE) {
            year = year - yr_start + 1) %>%
     filter(op_issue & year <= max(sim_verify$mgt_out$year) - yr_start)
 
-  schdl_report <- schdl_join %>%
-    select(schedule, op_issue) %>%
-    group_by(schedule) %>%
-    summarise(op_issue = sum(op_issue),
-              .groups = 'drop')
+  if(nrow(schdl_join) > 0) {
+    schdl_report <- schdl_join %>%
+      select(schedule, op_issue) %>%
+      group_by(schedule) %>%
+      summarise(op_issue = sum(op_issue),
+                .groups = 'drop')
 
-  ops_detail <- schdl_join %>%
-    group_by(schedule) %>%
-    group_split() %>%
-    map(., ~ filter(.x, op_issue)) %>%
-    map(., ~ select(.x, year, mon, day, op_typ, op_data1_trig, starts_with('op_data')))
+    ops_detail <- schdl_join %>%
+      group_by(schedule) %>%
+      group_split() %>%
+      map(., ~ filter(.x, op_issue)) %>%
+      map(., ~ select(.x, year, mon, day, op_typ, op_data1_trig, starts_with('op_data')))
 
-  schdl_report <- schdl_report %>%
-    mutate(schedule_report = ops_detail)
+    schdl_report <- schdl_report %>%
+      mutate(schedule_report = ops_detail)
 
-  if(write_report){
-    print("Writing schedule_report.txt")
-    write(paste("File was written with SWATdoctR at", Sys.time( )), file = "schedule_report.txt")
-    for (i in seq(1, length(schdl_report$schedule_report))){
-      mgt <- schdl_report$schedule[[i]]
-      id <- get_hru_id_by_attribute(sim_verify, mgt = mgt)$id[1]
-      write_lines(" ", "schedule_report.txt", append = TRUE)
-      write_lines(paste("HRU number -", id, "- management name:", mgt), "schedule_report.txt", append = TRUE)
-      write_lines(" ", "schedule_report.txt", append = TRUE)
-      write_delim(schdl_report$schedule_report[[i]], "schedule_report.txt", delim = "\t", append = TRUE, col_names = TRUE)
-    }
-    print(paste("The file schedule_report.txt was written in", getwd( ), "directory."))
+    # if(write_report){
+    #   print("Writing schedule_report.txt")
+    #   write(paste("File was written with SWATdoctR at", Sys.time( )), file = "schedule_report.txt")
+    #   for (i in seq(1, length(schdl_report$schedule_report))){
+    #     mgt <- schdl_report$schedule[[i]]
+    #     id <- get_hru_id_by_attribute(sim_verify, mgt = mgt)$id[1]
+    #     write_lines(" ", "schedule_report.txt", append = TRUE)
+    #     write_lines(paste("HRU number -", id, "- management name:", mgt), "schedule_report.txt", append = TRUE)
+    #     write_lines(" ", "schedule_report.txt", append = TRUE)
+    #     write_delim(schdl_report$schedule_report[[i]], "schedule_report.txt", delim = "\t", append = TRUE, col_names = TRUE)
+    #   }
+    #   print(paste("The file schedule_report.txt was written in", getwd( ), "directory."))
+    # }
+
+    return(schdl_report)
+
+  } else {
+    cat('Management OK! No differences between scheduled and triggered managments identified.')
   }
-
-  return(schdl_report)
 }
 
 
