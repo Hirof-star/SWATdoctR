@@ -61,11 +61,11 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
   msg <- run(run_os(swat_exe, os), wd = run_path,
              error_on_status = FALSE)
 
-  if(msg$timeout) {
+  if(nchar(msg$stderr) > 0) {
     out_msg <- str_split(msg$stdout, '\r\n|\r|\n', simplify = TRUE) %>%
       .[max(1, length(.) - 10):length(.)]
-    err_msg <- c(paste0('Simulation timed out after ', time_out, ' sec'),
-                 'Simulation run:', out_msg)
+    err_msg <- str_split(msg$stderr, '\r\n|\r|\n', simplify = TRUE)
+    err_msg <- c('Last output:', out_msg, 'Error:', err_msg)
     model_output <- err_msg
   } else if(nchar(msg$stderr) == 0) {
     model_output <- list()
