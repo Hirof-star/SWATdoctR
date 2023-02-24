@@ -22,7 +22,7 @@
 #' @return Returns a table of HRUs for which at least one of the selected checks
 #'   identified a potential issue.
 #'
-#' @importFrom case_when left_join mutate rename select %>%
+#' @importFrom dplyr case_when left_join mutate rename select %>%
 #' @importFrom stringr str_detect
 #' @importFrom tibble tibble
 #' @importFrom tidyselect ends_with everything starts_with
