@@ -31,7 +31,7 @@
 #' @return Returns the simulation results for the defined output variables as a
 #'   list of tibbles.
 #'
-#' @importFrom dplyr %>%
+#' @importFrom dplyr %>% distinct
 #' @importFrom processx run
 #' @importFrom stringr str_split
 #' @importFrom tibble tibble
@@ -69,7 +69,6 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
     model_output <- err_msg
   } else if(nchar(msg$stderr) == 0) {
     model_output <- list()
-
     if ('plt' %in% outputs) {
       model_output$hru_pw_day <- read_tbl('hru_pw_day.txt', run_path, 3)
     }
@@ -77,6 +76,12 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
       model_output$basin_wb_day <- read_tbl('basin_wb_day.txt', run_path, 3)
       model_output$basin_pw_day <- read_tbl('basin_pw_day.txt', run_path, 3)
       model_output$hru_wb_aa <- read_tbl('hru_wb_aa.txt', run_path, 3)
+      tryCatch({
+        model_output$recall_yr <- read_tbl('recall_yr.txt', run_path, 3)
+      },
+      error = function(e) {
+        model_output$recall_yr <- NULL
+      })
     }
     if ('mgt' %in% outputs) {
       model_output$mgt_out <- read_mgt(run_path)
@@ -86,6 +91,7 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
       landuse_lum <- read_tbl('landuse.lum', run_path, 2)
       model_output$lum_mgt <- left_join(hru_data, landuse_lum,
                                         by = c("lu_mgt" = 'name')) %>%
+        distinct() %>%
         select(id, topo, hydro, soil, lu_mgt, plnt_com, mgt, tile)
     }
   }
