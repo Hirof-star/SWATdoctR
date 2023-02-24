@@ -102,10 +102,66 @@ plot_climate_annual <- function(sim_verify) {
     pivot_longer(cols = -yr)
 
   gg_tmp <- ggplot() +
-    geom_errorbarh(data = tmp_tbl, aes(xmax = yr + 0.5, xmin = yr - 0.5, y = value, height = 0, col = name), lwd = 1) +
+    geom_errorbarh(data = tmp_tbl, aes(xmax = yr + 0.5, xmin = yr - 0.5,
+                                       y = value, height = 0, col = name),
+                   linewidth = 1) +
     scale_color_manual(values = c('dodgerblue4', 'black', 'tomato3')) +
     # geom_step(data = pet_tbl, aes(x = yr, y = value_sum), direction = 'mid') +
     labs(y = 'Temperature (\u00b0C)') +
+    theme_bw() +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          legend.title = element_blank(),
+          legend.box = "horizontal",
+          legend.direction = 'horizontal',
+          legend.justification=c(1,1),
+          legend.position=c(0.995,0.99),
+          legend.key = element_blank(),
+          legend.background = element_blank(),
+          legend.box.background = element_rect(colour = "black", fill =alpha('white', 0.6)))
+
+  rhum_tbl <- basin_pw %>%
+    select(yr, rhum) %>%
+    group_by(yr) %>%
+    summarise(rhum_min  = min(rhum),
+              rhum_max  = max(rhum),
+              rhum_mean = mean(rhum)) %>%
+    pivot_longer(cols = -yr)
+
+  gg_rhum <- ggplot() +
+    geom_errorbarh(data = rhum_tbl, aes(xmax = yr + 0.5, xmin = yr - 0.5,
+                                        y = value, height = 0, col = name),
+                   linewidth = 1) +
+    scale_color_manual(values = c('dodgerblue4', 'black', 'tomato3')) +
+    # geom_step(data = pet_tbl, aes(x = yr, y = value_sum), direction = 'mid') +
+    labs(y = 'Relative humidity (-)') +
+    theme_bw() +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          legend.title = element_blank(),
+          legend.box = "horizontal",
+          legend.direction = 'horizontal',
+          legend.justification=c(1,1),
+          legend.position=c(0.995,0.99),
+          legend.key = element_blank(),
+          legend.background = element_blank(),
+          legend.box.background = element_rect(colour = "black", fill =alpha('white', 0.6)))
+
+  wnd_tbl <- basin_pw %>%
+    select(yr, wndspd) %>%
+    group_by(yr) %>%
+    summarise(wnd_min  = min(wndspd),
+              wnd_max  = max(wndspd),
+              wnd_mean = mean(wndspd)) %>%
+    pivot_longer(cols = -yr)
+
+  gg_wnd <- ggplot() +
+    geom_errorbarh(data = wnd_tbl, aes(xmax = yr + 0.5, xmin = yr - 0.5,
+                                        y = value, height = 0, col = name),
+                   linewidth = 1) +
+    scale_color_manual(values = c('dodgerblue4', 'black', 'tomato3')) +
+    # geom_step(data = pet_tbl, aes(x = yr, y = value_sum), direction = 'mid') +
+    labs(y = expression(Wind~speed~(m~s^{-1}))) +
     theme_bw() +
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
@@ -126,7 +182,7 @@ plot_climate_annual <- function(sim_verify) {
     geom_col(data = slr_tbl, aes(x = yr, y = value_sum, fill = name)) +
     scale_fill_manual(values = 'tan3') +
     # labs(y = expression("Another really really really really long y label here "~cm^3)) +
-    labs(y = expression(Solar~Radiation~(MJ~m^{-2})),
+    labs(y = expression(Solar~radiation~(MJ~m^{-2})),
          x = 'Year') +
     theme_bw() +
     theme(legend.title = element_blank(),
@@ -156,10 +212,15 @@ plot_climate_annual <- function(sim_verify) {
   gg_tmp_stat <- plot_stat_text(tmp_stat,
                                 vars = c('tmn day', 'tmpav', 'tmx day'),
                                 c(5,4,3), '\u00b0C', F, digit = 1)
+  gg_rhum_stat <- plot_stat_text(clim_data_annual, vars = c('rhum'),
+                                c(5), '', F, digit = 2, type = 'value_mean')
+  gg_wnd_stat <- plot_stat_text(clim_data_annual, vars = c('wndspd'),
+                                c(5), '', 'm/s', digit = 2, type = 'value_mean')
   gg_slr_stat <- plot_stat_text(clim_data_annual, vars = c('solarad'),
                                 c(5), 'MJ m^-2', F)
 
   gg_et + gg_et_stat + gg_pcp + gg_pcp_stat + gg_tmp + gg_tmp_stat +
+    gg_rhum + gg_rhum_stat + gg_wnd + gg_wnd_stat +
     gg_slr + gg_slr_stat + plot_layout(ncol = 2, widths = c(0.85, 0.15))
 }
 
@@ -169,29 +230,33 @@ plot_climate_annual <- function(sim_verify) {
 #' @param pos Print positions of the variables and their values
 #' @param unit_add Character string which defines unit to be added to values
 #' @param add_title Boolean to define if title should be added to table
+#' @param type Either plot annual sums (\code{type = 'value_sum'}), or annual
+#'   means (\code{type = 'value_mean'})
 #'
 #' @importFrom dplyr filter group_by mutate select summarise %>%
 #' @importFrom ggplot2 aes ggplot lims geom_text theme_void
+#' @importFrom tidyselect all_of
 #'
 #' @keywords internal
 #'
-plot_stat_text <- function(tbl, vars, pos, unit_add, add_title, digit = 0) {
+plot_stat_text <- function(tbl, vars, pos, unit_add, add_title, digit = 0, type = 'value_sum') {
   tbl_mean <- tbl %>%
     filter(name %in% vars) %>%
-    select(name, value_sum) %>%
+    select(name, all_of(type)) %>%
+    set_names(c('name', 'value')) %>%
     group_by(name) %>%
-    summarise(value_sum = round(mean(value_sum), digits = digit)) %>%
-    mutate(value_sum = paste(value_sum, unit_add),
+    summarise(value = round(mean(value), digits = digit)) %>%
+    mutate(value = paste(value, unit_add),
            y = pos)
 
   gg <- ggplot() +
     theme_void() +
     lims(x = c(0, 5), y = c(0,5)) +
     geom_text(aes(x = 0, y = tbl_mean$y, label = paste0(tbl_mean$name, ':')), hjust = 0) +
-    geom_text(aes(x = 5, y = tbl_mean$y, label = tbl_mean$value_sum), hjust = 1)
+    geom_text(aes(x = 5, y = tbl_mean$y, label = tbl_mean$value), hjust = 1)
 
   if(add_title) {
-    gg <- gg + geom_text(aes(x = 0, y = 5, label = 'Average annual values:'), hjust = 0, size = 6)
+    gg <- gg + geom_text(aes(x = 0, y = 5, label = 'Average annual:'), hjust = 0, size = 6)
   }
 
   return(gg)

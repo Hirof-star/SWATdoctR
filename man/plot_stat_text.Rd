@@ -4,7 +4,15 @@
 \alias{plot_stat_text}
 \title{Plot annual average values in tabular text form as a ggplot}
 \usage{
-plot_stat_text(tbl, vars, pos, unit_add, add_title, digit = 0)
+plot_stat_text(
+  tbl,
+  vars,
+  pos,
+  unit_add,
+  add_title,
+  digit = 0,
+  type = "value_sum"
+)
 }
 \arguments{
 \item{tbl}{Processed climate variable table}
@@ -16,6 +24,9 @@ plot_stat_text(tbl, vars, pos, unit_add, add_title, digit = 0)
 \item{unit_add}{Character string which defines unit to be added to values}
 
 \item{add_title}{Boolean to define if title should be added to table}
+
+\item{type}{Either plot annual sums (\code{type = 'value_sum'}), or annual
+means (\code{type = 'value_mean'})}
 }
 \description{
 Plot annual average values in tabular text form as a ggplot
