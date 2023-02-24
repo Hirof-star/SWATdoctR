@@ -6,7 +6,7 @@
 </style>
 
 ---
-title: "Jeziorka catchment"
+title: "Zglowiaczka catchment (PL)"
 author: "name surname"
 affiliation: "your affiliation"
 email: "your@email"
@@ -29,6 +29,10 @@ model_path <- "path_to_txtinout"
 ##This path to save run_swat_verification function results
 result_path <- "path_to_run_swat_verification_results"
 model_name <- "model_a"
+
+model_path <- "../Test_models/Zglowiaczka"
+result_path <- "./test_data/"
+model_name <- "Zglowiaczka"
 rpath <- c()
 for(ns in c(0:2)){rpath <- c(rpath, paste0(result_path, model_name, "_ns", ns, ".rds"))}
 ```
