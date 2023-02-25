@@ -58,6 +58,7 @@ get_hru_id_by_attribute <- function(sim_verify, lum = NULL, mgt = NULL, soil = N
 #' @export
 #'
 plot_hru_pw_day <- function(sim_verify, hru_id, var, title = "", years = 1900:2100) {
+  .Deprecated("plot_hru_pw")
   plot_data <- sim_verify$hru_pw_day %>%
     filter(unit %in% hru_id) %>%
     filter(yr %in% years) %>%
@@ -104,6 +105,7 @@ plot_hru_pw_day <- function(sim_verify, hru_id, var, title = "", years = 1900:21
 #' }
 
 plot_hru_var <- function(sim_verify, hru_id, var, period = "day", fn_summarize = "mean"){
+  .Deprecated("plot_hru_pw")
   options(dplyr.summarise.inform = FALSE)
   df <- sim_verify$hru_pw_day[sim_verify$hru_pw_day$unit %in% hru_id, c("unit", "yr", "mon", "day", var)]
   ##Aggregating data by time step

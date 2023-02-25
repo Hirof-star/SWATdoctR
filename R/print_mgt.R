@@ -52,6 +52,7 @@ print_triggered_mgt <- function(sim_verify, hru_id, years = 1900:2100) {
 #' @importFrom purrr map
 #' @importFrom stringr str_sub str_remove
 #' @importFrom readr write_delim write_lines
+#' @importFrom stats lag
 #'
 #' @export
 #'
