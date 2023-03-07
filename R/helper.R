@@ -113,3 +113,8 @@ remove_tail <- function(f, pattern){
   }
   return(f)
 }
+
+lwr <- function(df){
+  names(df) <- tolower(names(df))
+  return(df)
+}

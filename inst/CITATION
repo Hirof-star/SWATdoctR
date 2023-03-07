@@ -1,0 +1,13 @@
+citHeader("To cite SWATdoctR in publications use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = 'SWATdoctR: SWAT+ model setup verification tool',
+  author = 'Christoph Schürz and Svajunas Plunge',
+  year     = '2023',
+  note  = 'R package',
+  url      = 'https://git.ufz.de/schuerz/swatdoctr',
+  textVersion = paste('Schürz, Christoph and Plunge, Svajunas (2023),',
+  'R package for SWAT+ model setup verification.',
+  'URL https://git.ufz.de/schuerz/swatdoctr')
+)
