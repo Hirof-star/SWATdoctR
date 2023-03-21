@@ -142,7 +142,7 @@ plot_hru_pw_day <- function(sim_verify, hru_id, var, years = 1900:2100, add_crop
               strip.background = element_blank(),
               legend.position = 'none',
               # strip.placement = 'outside',
-              strip.text.y.left = element_text(face = 'bold', angle = 0))
+              strip.text.y.left = element_text(face = 'bold', angle = 0, hjust = 1))
 
       hru_plot <- gg_crop / gg_var + plot_layout(heights = c(0.05*length(unique(crop_dates$hru)), 1))
     } else {
