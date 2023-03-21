@@ -44,32 +44,48 @@ get_hru_id_by_attribute <- function(sim_verify, lum = NULL, mgt = NULL, soil = N
 #'   be set in  \code{run_swat_verification()}
 #' @param hru_id Numeric vector with HRU ids for which variables should be plotted
 #' @param var Character vector that defines the variable names that are plotted
-#' @param title Character for title to be put in the figure.
 #' @param years Years of the simulated data for which varaibles are plotted.
+#' @param add_crop TRUE adds subplot with growing periods of crops in plotted HRUs.
 #'
-#' @importFrom dplyr filter mutate select %>%
+#' @importFrom dplyr cur_group_id filter group_by group_split mutate rename select %>%
 #' @importFrom lubridate ymd
-#' @importFrom tidyr pivot_longer
+#' @importFrom purrr map
+#' @importFrom tibble tibble
+#' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom tidyselect all_of
 #' @import ggplot2
+#' @import patchwork
 #'
-#' @return Returns a table with hru ids and attributes.
+#' @return Returns a ggplot or patchwork ggplot of daily hru_pw output variables
 #'
 #' @export
 #'
-plot_hru_pw_day <- function(sim_verify, hru_id, var, title = "", years = 1900:2100) {
-  .Deprecated("plot_hru_pw")
+#' @examples
+#' \dontrun{
+#' plot_hru_pw_day(sim_nostress, hru_id = 1, var = c('lai', 'bioms'), add_crop = TRUE)
+#' }
+#'
+plot_hru_pw_day <- function(sim_verify, hru_id, var, years = 1900:2100, add_crop = TRUE) {
+  # .Deprecated("plot_hru_pw")
+
+  col_hex <- unname(palette.colors(palette = "Okabe-Ito")[2:(length(hru_id)+1)])
+
   plot_data <- sim_verify$hru_pw_day %>%
     filter(unit %in% hru_id) %>%
     filter(yr %in% years) %>%
     mutate(date = ymd(paste(yr, mon, day, sep = '-')),
-           unit = paste('hru:', unit)) %>%
+           unit = factor(paste('hru:', unit), levels = paste('hru:', unique(unit)))) %>%
     select(date, unit, all_of(var)) %>%
-    pivot_longer(., cols = - c(date, unit), names_to = 'var', values_to = 'value')
+    pivot_longer(., cols = - c(date, unit), names_to = 'var', values_to = 'value') %>%
+    rename(hru = unit)
 
-  ggplot(plot_data) +
-    geom_line(aes(x = date, y = value, color = unit, lty = unit)) +
-    labs(x = 'Date', color = 'HRU', lty = 'HRU', title=title) +
+  var_col_assign <- tibble(hru = unique(plot_data$hru),
+                           col = col_hex)
+
+  gg_var <- ggplot(plot_data) +
+    geom_line(aes(x = date, y = value, color = hru, linetype = hru), linewidth = 0.75) +
+    scale_color_manual(values = var_col_assign$col) +
+    labs(x = 'Date', color = 'HRU', lty = 'HRU') +
     scale_x_date(date_labels = '%Y-%m-%d') +
     facet_grid(rows = vars(all_of(var)), scales = 'free_y', switch = 'y') +
     theme_bw() +
@@ -78,6 +94,96 @@ plot_hru_pw_day <- function(sim_verify, hru_id, var, title = "", years = 1900:21
           strip.placement = 'outside',
           strip.text = element_text(face = 'bold'),
           axis.title.y = element_blank())
+
+  if (add_crop) {
+    crop_dates <- sim_verify$mgt_out %>%
+      filter(hru %in% hru_id) %>%
+      filter(year %in% unique(year(plot_data$date))) %>%
+      filter(operation %in% c('PLANT', 'KILL', 'HARV/KILL'))
+
+    if(nrow(crop_dates) > 0) {
+      crop_dates <- crop_dates %>%
+      mutate(date = ymd(paste(year, mon, day, sep = '-')),
+             operation = ifelse(operation == 'PLANT', 'start', 'end')) %>%
+      select(hru, date, op_typ, operation) %>%
+      group_by(hru) %>%
+      group_split() %>%
+      map(., ~ add_start_end(.x)) %>%
+      bind_rows() %>%
+      mutate(id = ifelse(operation == 'start', 1, 0),
+             id = cumsum(id)) %>%
+      pivot_wider(.,
+                  names_from = operation,
+                  values_from = date,
+                  id_cols = c(id, hru, op_typ)) %>%
+      mutate(mid = start + (end - start)/2,
+             hru = factor(paste('hru:', hru), levels = paste('hru:', unique(hru)))) %>%
+      group_by(hru) %>%
+      mutate(id = cur_group_id()) %>%
+      ungroup()
+
+      y_labels <- crop_dates %>%
+        distinct(id, hru)
+
+      crop_col_assign <- tibble(hru = unique(crop_dates$hru)) %>%
+        left_join(., var_col_assign, by = 'hru')
+
+      gg_crop <- ggplot(crop_dates) +
+        geom_rect(aes(xmin = start, xmax = end, ymin = id- 0.35, ymax = id + 0.35, fill = hru)) +
+        geom_text(aes(x = mid, y = id, label = op_typ)) +
+        scale_y_continuous(breaks = y_labels$id, labels = y_labels$hru) +
+        scale_fill_manual(values = crop_col_assign$col) +
+        labs(y = 'hru') +
+        facet_grid(rows = vars(hru), scales = 'free_y', switch = 'y') +
+        theme_bw() +
+        theme(axis.text = element_blank(),
+              axis.title = element_blank(),
+              axis.ticks.y = element_blank(),
+              strip.background = element_blank(),
+              legend.position = 'none',
+              # strip.placement = 'outside',
+              strip.text.y.left = element_text(face = 'bold', angle = 0))
+
+      hru_plot <- gg_crop / gg_var + plot_layout(heights = c(0.05*length(unique(crop_dates$hru)), 1))
+    } else {
+      message('Adding crop plot omitted, as selected HRUs do not have plant and harvest operations.')
+      hru_plot <- gg_var
+    }
+  } else {
+    hru_plot <- gg_var
+  }
+
+  return(hru_plot)
+}
+
+#' Add start and end of a crop planting period at beginning and end of year for
+#' winter crops. This is required to correctly display crops in plot_hru_pw_day
+#'
+#' @param tbl Table with crops and plant and harvest dates
+#'
+#' @importFrom lubridate ceiling_date floor_date
+#' @importFrom tibble add_row
+#'
+#' @keywords internal
+#'
+add_start_end <- function(tbl) {
+  if(tbl$operation[1] == 'end') {
+    tbl <- add_row(tbl,
+                   hru = tbl$hru[1],
+                   date = floor_date(tbl$date[1], unit = 'year'),
+                   op_typ = tbl$op_typ[1],
+                   operation = 'start',
+                   .before = 1)
+  }
+
+  if(tbl$operation[nrow(tbl)] == 'start') {
+    tbl <- add_row(tbl,
+                   hru = tbl$hru[1],
+                   date = ceiling_date(tbl$date[nrow(tbl)], unit = 'year'),
+                   op_typ = tbl$op_typ[nrow(tbl)],
+                   operation = 'end')
+  }
+  return(tbl)
 }
 
 

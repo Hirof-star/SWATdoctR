@@ -123,7 +123,7 @@ run_swat_verification <- function(project_path, outputs = c('wb', 'mgt', 'plt'),
 read_tbl <- function(file, run_path, n_skip) {
   file_path <- paste0(run_path, '/', file)
 
-  col_names <- read_lines(file = file_path, skip = 1, n_max = 1) %>%
+  col_names <- read_lines(file = file_path, skip = 1, n_max = 1, lazy = FALSE) %>%
     str_trim(.) %>%
     str_split(., '[:space:]+') %>%
     unlist()

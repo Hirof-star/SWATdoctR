@@ -4,7 +4,7 @@
 \alias{plot_hru_pw_day}
 \title{Plot daily simulated variables which are saved in hru_pw_day}
 \usage{
-plot_hru_pw_day(sim_verify, hru_id, var, title = "", years = 1900:2100)
+plot_hru_pw_day(sim_verify, hru_id, var, years = 1900:2100, add_crop = TRUE)
 }
 \arguments{
 \item{sim_verify}{Simulation output of the function \code{run_swat_verification()}.
@@ -15,13 +15,19 @@ be set in  \code{run_swat_verification()}}
 
 \item{var}{Character vector that defines the variable names that are plotted}
 
-\item{title}{Character for title to be put in the figure.}
-
 \item{years}{Years of the simulated data for which varaibles are plotted.}
+
+\item{add_crop}{TRUE adds subplot with growing periods of crops in plotted HRUs.}
 }
 \value{
-Returns a table with hru ids and attributes.
+Returns a ggplot or patchwork ggplot of daily hru_pw output variables
 }
 \description{
 plot_hru_pw_day plots daily time series of variables from the output file hru_pw_day
+}
+\examples{
+\dontrun{
+plot_hru_pw_day(sim_nostress, hru_id = 1, var = c('lai', 'bioms'), add_crop = TRUE)
+}
+
 }
