@@ -147,3 +147,43 @@ var_at_harv <- function(mgt_out, years){
   }
   return(tbl_harv)
 }
+
+
+#' Filter HRUs by their variable values at harvest/kill
+#'
+#' The function can be complementary to \code{plot_variable_at_harvkill()} plots.
+#' If any issues are identified in the boxplots, the results can be filtered for
+#' further analysis with \code{filter_hru_at_harvkill()}.
+#'
+#' @param sim_verify Simulation output of the function \code{run_swat_verification()}
+#' as a single object or as a list of objects (representing \code{run_swat_verification()}
+#' function runs with different settings).
+#'   To plot the heat units at least the output option \code{outputs = 'mgt'}
+#'   must be set in \code{run_swat_verification()}.
+#' @param ... Boolean operations to be applied in the filter operation of the
+#'   management simulation outputs. Possible variables are \code{crop, phu, plant_bioms,
+#'   yield, water_stress, aero_stress, temp_stress, n_stress} and \code{p_stress}.
+#'
+#' @importFrom dplyr filter mutate select %>%
+#' @importFrom lubridate ymd
+#' @importFrom purrr set_names
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' # Filter all HRUs with unusually high PHU values at harvest kill
+#' filter_hru_at_harvkill(sim_verify, phu > 5)
+#'
+#' # Filter all HRUs with crop 'wbar' or 'wira' planted but no yield
+#' filter_hru_at_harvkill(sim_verify, crop %in% c('wbar', 'wira'), yield == 0)
+#' }
+filter_hru_at_harvkill <- function(sim_verify, ...) {
+  sim_verify$mgt_out %>%
+    mutate(date = ymd(paste(year, mon, day, sep = '-'))) %>%
+    filter(operation == 'HARVEST') %>%
+    select(hru, date, op_typ, phuplant, plant_bioms, op_var, var4, var5, var3, var1, var2) %>%
+    set_names(c('hru', 'date', 'crop', 'phu', 'plant_bioms', 'yield', 'water_stress', 'aero_stress',
+                'temp_stress', 'n_stress', 'p_stress')) %>%
+    filter(., ...)
+}
+

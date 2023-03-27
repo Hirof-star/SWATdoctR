@@ -2,6 +2,7 @@
 
 export(add_kill_op)
 export(check_hru_waterbalance)
+export(filter_hru_at_harvkill)
 export(get_hru_id_by_attribute)
 export(plot_basin_var)
 export(plot_climate_annual)
