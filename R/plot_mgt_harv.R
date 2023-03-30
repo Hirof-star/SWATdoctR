@@ -38,20 +38,20 @@ plot_variable_at_harvkill <- function(sim_verify, variable, years = 1900:2100) {
   is_list_sim <- "mgt_out" %in% names(sim_verify[[1]])
   if(is_single_sim){
     years <- years[years >= min(sim_verify$basin_wb_day$yr)]
-
     tbl_harv <- prepare_var_at_harvkill(sim_verify$mgt_out, years, variable)
   } else if (is_list_sim){
+    years <- years[years >= min(sim_verify[[1]]$basin_wb_day$yr)]
     df <- NULL
     nn <- c()
     for(n in names(sim_verify)){
       mgt_out <- sim_verify[[n]][["mgt_out"]]
       tbl_harv <- prepare_var_at_harvkill(mgt_out, years, variable)
-      tbl_harv$name <- n
+      tbl_harv$simulation <- n
       nn <- c(nn, n)
       if(is.null(df)){df <- tbl_harv} else {df <- bind_rows(df, tbl_harv)}
     }
     tbl_harv <- df %>%
-      mutate(name = factor(name, levels = nn))
+      mutate(simulation = factor(simulation, levels = nn))
   } else {
     stop('Incorrect input for sim_verify')
   }
