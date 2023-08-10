@@ -329,10 +329,10 @@ prepare_stress <- function(mgt_out, years) {
     filter(no_plntkill) %>%
     group_by(hru, year, op_typ) %>%
     summarise(var4 = max(var4), var5 = max(var5), var3 = max(var3),
-              var2 = max(var2), var1 = max(var1), .groups = 'drop') %>%
+              var1 = max(var1), var2 = max(var2), .groups = 'drop') %>%
     group_by(hru, op_typ) %>%
     mutate(var4 = diff1(var4), var5 = diff1(var5), var3 = diff1(var3),
-           var2 = diff1(var2), var1 = diff1(var1)) %>%
+           var1 = diff1(var1), var2 = diff1(var2)) %>%
     ungroup() %>%
     filter(year %in% years) %>%
     select(-hru, -year)
@@ -343,7 +343,7 @@ prepare_stress <- function(mgt_out, years) {
     filter(operation == 'HARVEST') %>%
     group_by(hru, op_typ, grw_group) %>%
     summarise(var4 = max(var4), var5 = max(var5), var3 = max(var3),
-              var2 = max(var2), var1 = max(var1), .groups = 'drop') %>%
+              var1 = max(var1), var2 = max(var2), .groups = 'drop') %>%
     ungroup(.) %>%
     select(-hru, -grw_group)
 
