@@ -153,8 +153,13 @@ remove_consonants <- function(tbl) {
     n <- tbl$n_chr[1] - 12
     txt_split <- str_split(tbl$lu_mgt_upd[1], '', simplify = TRUE)
     alph_pos <- which(str_detect(txt_split, '[:alpha:]'))
-    pos_rmv <- sample(alph_pos[alph_pos > 1], n)
-    txt <- paste(txt_split[-pos_rmv], collapse = '')
+    pos_rmv <- seq(2, length(alph_pos), 2)
+    pos_rmv <- pos_rmv[1:min(length(pos_rmv), n)]
+    if (length(pos_rmv) < n) {
+      n_diff <- n - length(pos_rmv)
+      pos_rmv <- c(pos_rmv, seq(3, length(alph_pos), length.out = n_diff))
+    }
+    txt <- paste(txt_split[-alph_pos[pos_rmv]], collapse = '')
     tbl$lu_mgt_upd <- txt
   }
   return(tbl)
