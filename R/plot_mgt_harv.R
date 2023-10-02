@@ -270,7 +270,8 @@ prepare_phu <- function(mgt_out, years) {
     group_by(hru, year, op_typ) %>%
   # ungroup() %>%
     # filter(n_op > 1) %>%
-    mutate(date_diff = diff(date)) %>%
+    # mutate(date_diff = diff(date)) %>%
+    mutate(date_diff = lead(date)-date) %>% ##This line avoids error if only one year for crop is available without kill
     ungroup() %>%
     filter(year %in% years)
 
