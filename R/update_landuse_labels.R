@@ -60,14 +60,14 @@ update_landuse_labels <- function(project_path) {
   mgt_lbl <- lu_lbl %>%
     mutate(schedule = str_replace(lu_mgt, 'lum', 'mgt'),
            schedule_upd = str_replace(lu_mgt_upd, 'lum', 'mgt')) %>%
-    select(schedule, schedule_upd) %>%
-    add_row(schedule = 'null', schedule_upd = 'null')
+    select(schedule, schedule_upd) #%>%
+    # add_row(schedule = 'null', schedule_upd = 'null')
 
   pcm_lbl <- lu_lbl %>%
     mutate(plnt_com = str_replace(lu_mgt, 'lum', 'comm'),
            plnt_com_upd = str_replace(lu_mgt_upd, 'lum', 'com')) %>%
-    select(plnt_com, plnt_com_upd) %>%
-    add_row(plnt_com = 'null', plnt_com_upd = 'null')
+    select(plnt_com, plnt_com_upd) #%>%
+    # add_row(plnt_com = 'null', plnt_com_upd = 'null')
 
   # Added to account for both variants 'comm' and 'com'
   pcm_lbl <- mutate(pcm_lbl, plnt_com = str_replace(plnt_com, 'comm', 'com')) %>%
@@ -84,14 +84,15 @@ update_landuse_labels <- function(project_path) {
                  paste0(project_path, '/hru-data.hru'))
 
   landuse_lum <- landuse_lum %>%
+    # filter(name == 'utrn_lum') %>%
     left_join(., lu_lbl, by = c('name' = 'lu_mgt')) %>%
     mutate(name = lu_mgt_upd) %>%
     select(-lu_mgt_upd) %>%
     left_join(., pcm_lbl, by = 'plnt_com') %>%
-    mutate(plnt_com = plnt_com_upd) %>%
+    mutate(plnt_com = ifelse(!is.na(plnt_com_upd), plnt_com_upd, 'null')) %>%
     select(-plnt_com_upd) %>%
     left_join(., mgt_lbl, by = c('mgt' = 'schedule')) %>%
-    mutate(mgt = schedule_upd) %>%
+    mutate(mgt = ifelse(!is.na(schedule_upd), schedule_upd, 'null')) %>%
     select(-schedule_upd)
 
   write_tbl_file(landuse_lum,
