@@ -4,13 +4,16 @@
 \alias{plot_waterbalance}
 \title{Plot the average annual water balance}
 \usage{
-plot_waterbalance(sim_verify)
+plot_waterbalance(sim_verify, simplified = FALSE)
 }
 \arguments{
 \item{sim_verify}{Simulation output of the function \code{run_swat_verification()}
 as a single object.
 To plot the water balance at least the output option \code{outputs = 'wb'}
 must be set in \code{run_swat_verification()}.}
+
+\item{simplified}{Boolean, TRUE to plot a simplified version of the flow chart.
+Default is FALSE.}
 }
 \value{
 Returns a ggplot flow chart with the simulated average annual water
