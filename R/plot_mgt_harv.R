@@ -275,7 +275,7 @@ prepare_phu <- function(mgt_out, years) {
     ungroup() %>%
     filter(year %in% years)
 
-  if(any(phu_tbl$date_diff > 1)) {
+  if(any(phu_tbl$date_diff > 1, na.rm = TRUE)) {
     crop_diff <- phu_tbl %>%
       filter(operation == 'KILL') %>%
       filter(date_diff > 1) %>%
