@@ -114,6 +114,33 @@ remove_tail <- function(f, pattern){
   return(f)
 }
 
+#' Get the Highest Version Number of a File
+#'
+#' This function searches for files in a specified directory that match a given
+#' pattern and extracts the highest version number from those files.
+#'
+#' @param parent_dir A string representing the path to the directory where the
+#' files are located.
+#' @param file_name A string representing the setup name.
+#' @param add A string to be added to the file name pattern to match.
+#' @return The highest version number found among the matching files as a
+#' numeric value. Returns 0 if no matching files are found.
+#' @export
+#' @examples
+#' \dontrun{
+#' file_version <- get_file_version(parent_dir, save_name, '_nostr_') + 1
+#' }
+
+get_file_version <- function(parent_dir, file_name, add) {
+  files <- list.files(path = parent_dir,
+                      pattern = paste0(file_name, add, '\\d{1,2}', '\\.rds'))
+  vers_val <- as.numeric(gsub(paste(file_name, add, '\\.rds', sep = '|'),
+                              '', files))
+  return(max(vers_val, 0))
+}
+
+#' @keywords internal
+
 lwr <- function(df){
   names(df) <- tolower(names(df))
   return(df)
