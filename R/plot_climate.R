@@ -128,6 +128,13 @@ plot_climate_annual <- function(sim_verify) {
               rhum_mean = mean(rhum)) %>%
     pivot_longer(cols = -yr)
 
+  rhum_check <- unique(rhum_tbl$value[!is.na(rhum_tbl$value)])
+  if(length(rhum_check) == 1 && rhum_check == 0.99){
+    warning("Relative humidity model output is consistently 0.99. Please check the input data.
+         It is likely that your model input is in the wrong units. Relative humidity
+         input should be in fractional units (0-1), not percentage!")
+  }
+
   gg_rhum <- ggplot() +
     geom_errorbarh(data = rhum_tbl, aes(xmax = yr + 0.5, xmin = yr - 0.5,
                                         y = value, height = 0, col = name),
