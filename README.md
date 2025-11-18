@@ -81,7 +81,7 @@ remotes::install_github("biopsichas/SWATdoctR")
 
 To get started with `SWATdoctR`, please refer to the vignettes available
 at:
-[https://biopsichas.github.io/SWATdoctR/](https://biopsichas.github.io/SWATdoctR/docs/articles/qa.html).
+[https://biopsichas.github.io/SWATdoctR/](https://biopsichas.github.io/SWATdoctR/articles/qa.html).
 
 ## References
 
