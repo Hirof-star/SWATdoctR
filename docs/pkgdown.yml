@@ -1,0 +1,11 @@
+pandoc: 3.6.3
+pkgdown: 2.1.3
+pkgdown_sha: ~
+articles:
+  qa-st1: qa-st1.html
+  qa-st2: qa-st2.html
+  qa-st3: qa-st3.html
+  qa-st4: qa-st4.html
+  qa-st5: qa-st5.html
+  qa: qa.html
+last_built: 2025-11-18T19:12Z

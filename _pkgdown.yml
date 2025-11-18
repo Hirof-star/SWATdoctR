@@ -1,0 +1,15 @@
+url: ~
+template:
+  bootstrap: 5
+  logo: "man/figures/logo.svg"
+
+articles:
+- title: Workflow
+  navbar: Workflow
+  contents:
+  - qa
+  - qa-st1
+  - qa-st2
+  - qa-st3
+  - qa-st4
+  - qa-st5

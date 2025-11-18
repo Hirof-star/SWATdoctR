@@ -1,0 +1,71 @@
+---
+title: "Introduction to SWATdoctR"
+<!-- output: rmarkdown::html_vignette -->
+output: github_document
+bibliography: vignettes/ref.bib
+vignette: >
+  %\VignetteIndexEntry{Introduction to SWATdoctR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+development:
+  mode: auto
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/"
+)
+library(badger)
+```
+
+# SWATdoctR
+
+`r badge_devel("biopsichas/SWATdoctR", "blue")`
+`r badge_last_commit("biopsichas/SWATdoctR", "green")`
+`r badge_lifecycle(stage = "stable")`
+`r badge_repostatus("active")`
+`r badge_code_size("biopsichas/SWATdoctR")`
+`r badge_license("MIT")`
+`r badge_doi("https://doi.org/10.1016/j.envsoft.2023.105878", "yellow")`
+
+`SWATdoctR` is a collection of functions and routines for SWAT model calibration and model diagnostics. The R package includes routines for a guided model setup verification, as well as functions for the visualization and diagnosis of simulation outputs. The aim of the `SWATdoctR` is to identify potential issues in the model setup early in the calibration process and to support the SWAT modeler to focus on a plausible process representation in the model calibration process. Additionally, package is intended to be used as SWAT+ models quality assurance tool in order to increase confidence level in model results and applications. A detailed overview is presented in the article by @plunge2024a.
+
+Most functions were developed for the implementation of modeling tasks in the [OPTAIN project](https://www.optain.eu/). These tools are intended to fill the gaps in the SWAT+ workflow alongside the main tools developed by [Christoph Schuerz](https://www.ufz.de/index.php?en=49467). Therefore, we highly recommend trying and using these tools:
+
+- [SWATprepR](https://biopsichas.github.io/SWATprepR/) - SWAT+ model input data preparation helper. The package is presented in the article @plunge2024b;
+- [SWATbuildR](https://github.com/chrisschuerz/SWATbuildR) - R tool for building SWAT+ setups.
+- [SWATfarmR](http://chrisschuerz.github.io/SWATfarmR/) - R tool for preparing management schedules for the SWAT model.
+- [SWATrunR](https://chrisschuerz.github.io/SWATrunR/) - R tool for running 
+SWAT models for different parameters and scenarios. Please install branch names *remove_legacy*. It could be done using line like this `remotes::install_github("chrisschuerz/SWATrunR@remove_legacy")`
+- [SWATtunR](https://biopsichas.github.io/SWATtunR/) - R tool for soft & hard calibration, validation of SWAT+ models.
+- [SWATmeasR](https://git.ufz.de/schuerz/swatmeasr) - R tool for implementing Natural/Small Water Retention Measures (NSWRMs) in the SWAT+ models and running scenarios.
+
+Additionally, we recommend checking out the following packages, which can be used to build scripted workflows for SWAT+:
+
+- [SWATreadR](https://github.com/chrisschuerz/SWATreadR) - Read and write SWAT+ input and output files.
+- [SWATdata](https://github.com/chrisschuerz/SWATdata) - SWAT project datasets for SWATrunR and SWATfarmR.
+  
+<img src="man/figures/swativerse_update.png" title="SWAT packages for R" alt="swativerse logo" width="80%" style="display: block; margin: auto;" />
+
+Detailed information about packages, workflow steps, input data, SWAT+ parameters, model calibration, validation, etc., could be found in the [SWAT+ modeling protocol](https://doi.org/10.5281/zenodo.7463395) @optain2022.
+
+## Installation
+
+You can install the development version of **SWATdoctR** from [GitHub](https://github.com/biopsichas/SWATdoctR/).
+
+``` r
+# If the package 'remotes' is not installed run first:
+install.packages("remotes")
+
+# The installation of `SWATprepR`.
+remotes::install_github("biopsichas/SWATdoctR")
+```
+
+## Getting started
+
+To get started with `SWATdoctR`, please refer to the vignettes available at: [https://biopsichas.github.io/SWATdoctR/](https://biopsichas.github.io/SWATdoctR/docs/articles/qa.html).
+
+## References
+
